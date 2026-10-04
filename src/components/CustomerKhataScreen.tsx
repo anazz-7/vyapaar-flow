@@ -61,7 +61,7 @@ export const CustomerKhataScreen: React.FC<CustomerKhataScreenProps> = ({
           {/* Identity Info */}
           <div className="flex items-start gap-3.5 min-w-0">
             <div className="w-12 h-12 rounded-xl bg-slate-900 text-white font-heading font-extrabold text-lg flex items-center justify-center flex-shrink-0 shadow-xs">
-              AF
+              {party.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'CU'}
             </div>
 
             <div className="min-w-0">
@@ -262,7 +262,14 @@ export const CustomerKhataScreen: React.FC<CustomerKhataScreenProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredEntries.map((entry) => {
+              {filteredEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400 text-xs">
+                    No transactions recorded in passbook yet.
+                  </td>
+                </tr>
+              ) : (
+                filteredEntries.map((entry) => {
                 const isSale = entry.type === 'sale';
                 const isPayment = entry.type === 'payment';
                 const isOpening = entry.type === 'opening';
@@ -392,8 +399,9 @@ export const CustomerKhataScreen: React.FC<CustomerKhataScreenProps> = ({
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
+              })
+            )}
+          </tbody>
           </table>
         </div>
       </div>

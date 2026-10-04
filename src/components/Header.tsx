@@ -4,21 +4,16 @@ import {
   Search,
   Plus,
   Bell,
-  HelpCircle,
   ChevronDown,
-  Building2,
-  Smartphone,
-  Monitor,
   Receipt,
   ShoppingCart,
   CreditCard,
   UserPlus,
   PackagePlus,
   Truck,
-  Check,
   ArrowLeft,
 } from 'lucide-react';
-import { ASSETS } from '../data/mockData';
+import { useStore } from '../context/StoreContext';
 
 interface HeaderProps {
   title?: string;
@@ -31,8 +26,6 @@ interface HeaderProps {
   onOpenQuickSale: () => void;
   onOpenRecordPayment: () => void;
   onOpenAddExpense: () => void;
-  isMobileFrame: boolean;
-  onToggleMobileFrame: (val: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -46,13 +39,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenQuickSale,
   onOpenRecordPayment,
   onOpenAddExpense,
-  isMobileFrame,
-  onToggleMobileFrame,
 }) => {
+  const { storeData } = useStore();
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
-  const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   const [showNotificationPopup, setShowNotificationPopup] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+
 
   const getBreadcrumbTitle = () => {
     if (title) return title;
@@ -98,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span className="hover:text-slate-800 cursor-pointer" onClick={() => onScreenChange('dashboard')}>
-                BM Super Mart
+                {storeData.settings.storeName || 'BM Super Mart'}
               </span>
               <span>/</span>
               <span className="font-semibold text-slate-900 truncate">
@@ -223,28 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Viewport Frame Mode Switcher (Desktop Workspace vs Phone Preview) */}
-        <button
-          onClick={() => onToggleMobileFrame(!isMobileFrame)}
-          className={`h-9 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors ${
-            isMobileFrame
-              ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-          }`}
-          title="Toggle between full responsive desktop view and mobile phone frame preview"
-        >
-          {isMobileFrame ? (
-            <>
-              <Smartphone className="w-4 h-4 text-blue-400" />
-              <span className="hidden md:inline">Phone Frame</span>
-            </>
-          ) : (
-            <>
-              <Monitor className="w-4 h-4 text-slate-500" />
-              <span className="hidden md:inline">Responsive</span>
-            </>
-          )}
-        </button>
+
 
         {/* Notifications */}
         <div className="relative">
@@ -293,7 +264,9 @@ export const Header: React.FC<HeaderProps> = ({
               A
             </div>
             <div className="hidden lg:flex flex-col text-left">
-              <span className="text-xs font-semibold text-slate-900 leading-tight">Anas</span>
+              <span className="text-xs font-semibold text-slate-900 leading-tight">
+                {(storeData.settings.ownerName || storeData.settings.proprietor || 'Anas').split(' ')[0]}
+              </span>
               <span className="text-[10px] text-slate-500 leading-tight">Admin (Owner)</span>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:inline" />
@@ -302,8 +275,8 @@ export const Header: React.FC<HeaderProps> = ({
           {showProfilePopup && (
             <div className="absolute right-0 mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-50 text-xs">
               <div className="px-3 py-2 border-b border-slate-100">
-                <p className="font-bold text-slate-900">Mohammed Anas</p>
-                <p className="text-[11px] text-slate-500">0786mdanas@gmail.com</p>
+                <p className="font-bold text-slate-900">{storeData.settings.ownerName || 'Mohammed Anas'}</p>
+                <p className="text-[11px] text-slate-500">{storeData.settings.phone || '0786mdanas@gmail.com'}</p>
               </div>
               <button
                 onClick={() => {

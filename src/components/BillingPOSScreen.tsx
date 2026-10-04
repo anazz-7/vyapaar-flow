@@ -22,9 +22,14 @@ import {
 } from 'lucide-react';
 import { MOCK_PRODUCTS, MOCK_CUSTOMERS } from '../data/mockData';
 import { ProductItem, CartItem, Party, LedgerEntry } from '../types';
+import { useStore } from '../context/StoreContext';
 
 interface BillingPOSScreenProps {
-  onSaveBill: (entry: LedgerEntry) => void;
+  onSaveBill: (
+    entry: LedgerEntry,
+    customerId?: string,
+    cartItems?: Array<{ productId: string; qty: number }>
+  ) => void;
   onOpenThermal: (bill: any) => void;
   onClose?: () => void;
 }
@@ -34,26 +39,30 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
   onOpenThermal,
   onClose,
 }) => {
+  const { storeData, addCustomer } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedCustomer, setSelectedCustomer] = useState<Party>(MOCK_CUSTOMERS[0]);
+
+  const defaultCustomer =
+    storeData.customers[0] || {
+      id: 'party-walkin',
+      name: 'Counter Cash Customer',
+      proprietor: 'Direct Walk-in',
+      phone: '+91 98000 00000',
+      category: 'RETAIL',
+      address: 'Indore Mandi',
+      outstandingBalance: 0,
+      isOverdue: false,
+      overdueDays: 0,
+      creditLimit: 25000,
+      totalPurchases: 0,
+      totalPaid: 0,
+      avgPayTimeDays: 0,
+    };
+
+  const [selectedCustomer, setSelectedCustomer] = useState<Party>(defaultCustomer);
   const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card' | 'Bank' | 'Udhaar'>('Cash');
-  const [cart, setCart] = useState<CartItem[]>([
-    {
-      product: MOCK_PRODUCTS[0],
-      qty: 5,
-      rate: MOCK_PRODUCTS[0].sellingPrice,
-      discountPercent: 0,
-      amount: 5 * MOCK_PRODUCTS[0].sellingPrice,
-    },
-    {
-      product: MOCK_PRODUCTS[1],
-      qty: 2,
-      rate: MOCK_PRODUCTS[1].sellingPrice,
-      discountPercent: 0,
-      amount: 2 * MOCK_PRODUCTS[1].sellingPrice,
-    },
-  ]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [overallDiscount, setOverallDiscount] = useState<number>(0);
   const [notes, setNotes] = useState('');
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
@@ -94,7 +103,7 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
 
   const categories = ['All', 'Dry Fruits', 'Spices', 'Grains', 'Packaged'];
 
-  const filteredProducts = MOCK_PRODUCTS.filter((prod) => {
+  const filteredProducts = storeData.products.filter((prod) => {
     const matchesCategory = selectedCategory === 'All' || prod.category === selectedCategory;
     const matchesQuery =
       prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -170,7 +179,7 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery) return;
-    const matched = MOCK_PRODUCTS.find(
+    const matched = storeData.products.find(
       (p) => p.barcode === searchQuery.trim() || p.sku.toLowerCase() === searchQuery.toLowerCase().trim()
     );
     if (matched) {
@@ -192,8 +201,13 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
       return;
     }
 
-    const billNumber = `INV-${Math.floor(1028 + Math.random() * 50)}`;
+    const billNumber = `INV-${Math.floor(1028 + Math.random() * 900)}`;
     const itemsSummary = cart.map((i) => `${i.product.name} (${i.qty} ${i.product.unit})`).join(', ');
+    const realDateStr = new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date());
 
     const newLedgerEntry: LedgerEntry = {
       id: `entry-${Date.now()}`,
@@ -201,7 +215,7 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
       billNumber,
       tag: paymentMode === 'Udhaar' ? 'UDHAAR' : paymentMode === 'UPI' ? 'ONLINE UPI' : 'CASH',
       amount: roundedTotal,
-      dateStr: 'Today, 24 Oct',
+      dateStr: `Today, ${realDateStr}`,
       timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       description: `Sale Bill #${billNumber}`,
       itemsSummary,
@@ -210,7 +224,11 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
       status: paymentMode === 'Udhaar' ? 'PENDING' : 'PAID',
     };
 
-    onSaveBill(newLedgerEntry);
+    onSaveBill(
+      newLedgerEntry,
+      selectedCustomer.id,
+      cart.map((i) => ({ productId: i.product.id, qty: i.qty }))
+    );
 
     if (shouldPrint) {
       onOpenThermal({
@@ -220,7 +238,7 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
         phone: selectedCustomer.phone,
         amount: roundedTotal,
         paymentMode: paymentMode === 'Udhaar' ? 'Credit' : paymentMode,
-        dateStr: 'Today, 24 Oct 2024',
+        dateStr: `Today, ${realDateStr}`,
         timeStr: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         settledBills: [{ billNo: billNumber, amount: roundedTotal }],
         remainingBalance: selectedCustomer.outstandingBalance + (paymentMode === 'Udhaar' ? roundedTotal : 0),
@@ -240,7 +258,7 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
     e.preventDefault();
     if (!newCustomerName) return;
     const newCust: Party = {
-      id: `party-custom-${Date.now()}`,
+      id: `party-${Date.now()}`,
       name: newCustomerName,
       proprietor: newCustomerName,
       phone: newCustomerPhone || '+91 98000 00000',
@@ -249,11 +267,12 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
       outstandingBalance: 0,
       isOverdue: false,
       overdueDays: 0,
-      creditLimit: 10000,
+      creditLimit: 25000,
       totalPurchases: 0,
       totalPaid: 0,
       avgPayTimeDays: 0,
     };
+    addCustomer(newCust);
     setSelectedCustomer(newCust);
     setShowAddCustomerModal(false);
     setNewCustomerName('');
@@ -510,16 +529,20 @@ export const BillingPOSScreen: React.FC<BillingPOSScreenProps> = ({
               <select
                 value={selectedCustomer.id}
                 onChange={(e) => {
-                  const found = MOCK_CUSTOMERS.find((c) => c.id === e.target.value);
+                  const found = storeData.customers.find((c) => c.id === e.target.value);
                   if (found) setSelectedCustomer(found);
                 }}
                 className="w-full h-9 px-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold text-slate-900 text-xs outline-hidden"
               >
-                {MOCK_CUSTOMERS.map((cust) => (
-                  <option key={cust.id} value={cust.id}>
-                    {cust.name} ({cust.category})
-                  </option>
-                ))}
+                {storeData.customers.length === 0 ? (
+                  <option value={selectedCustomer.id}>{selectedCustomer.name}</option>
+                ) : (
+                  storeData.customers.map((cust) => (
+                    <option key={cust.id} value={cust.id}>
+                      {cust.name} ({cust.category || 'Retail'})
+                    </option>
+                  ))
+                )}
               </select>
 
               <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-1">

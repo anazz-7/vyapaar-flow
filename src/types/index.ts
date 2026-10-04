@@ -101,6 +101,51 @@ export interface PaymentSubmission {
   addReviewLink: boolean;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  phone: string;
+  balanceDue: number;
+  category: string;
+}
+
+export interface DayBookRecord {
+  date: string; // YYYY-MM-DD
+  openingCash: number;
+  cashIn: number;
+  cashOut: number;
+  closingCash: number;
+  isLocked: boolean;
+  notes?: string;
+}
+
+export interface StoreSettings {
+  storeName: string;
+  proprietor: string;
+  ownerName?: string;
+  phone: string;
+  address: string;
+  autoRoundOff: boolean;
+  allowUdhaar: boolean;
+  enableThermal: boolean;
+  thermalPrinter?: boolean;
+  thermalWidth: '58mm' | '80mm';
+}
+
+export interface StoreData {
+  version: number;
+  isDemoLoaded: boolean;
+  lastBackupDate: string | null;
+  settings: StoreSettings;
+  customers: Party[];
+  suppliers: Supplier[];
+  products: ProductItem[];
+  ledgerEntries: LedgerEntry[];
+  expenses: ExpenseEntry[];
+  dayBooks: Record<string, DayBookRecord>;
+}
+
 export interface ToastNotification {
   id: string;
   title: string;
@@ -109,4 +154,5 @@ export interface ToastNotification {
   undoAction?: () => void;
   undoLabel?: string;
 }
+
 

@@ -13,15 +13,28 @@ import {
   PieChart,
   Wallet,
   Users,
-  Package,
 } from 'lucide-react';
-import { FINANCIAL_METRICS, INITIAL_EXPENSES, MOCK_CUSTOMERS } from '../data/mockData';
+import { useStore } from '../context/StoreContext';
 
 export const ReportsScreen: React.FC = () => {
+  const {
+    storeData,
+    thisMonthSales,
+    thisMonthPurchases,
+    thisMonthExpenses,
+    thisMonthNetProfit,
+    toCollect,
+  } = useStore();
+
   const [activeReportTab, setActiveReportTab] = useState<'pnl' | 'sales' | 'expenses' | 'receivables'>(
     'pnl'
   );
-  const [dateRange, setDateRange] = useState('October 2024 (Month-to-Date)');
+
+  const currentMonthName = new Intl.DateTimeFormat('en-IN', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+  const [dateRange, setDateRange] = useState(`${currentMonthName} (Month-to-Date)`);
 
   const reportTabs = [
     { id: 'pnl', label: 'Profit & Loss Statement', icon: BarChart3 },
@@ -113,10 +126,10 @@ export const ReportsScreen: React.FC = () => {
                   Gross Sales (Revenue)
                 </span>
                 <span className="font-heading font-bold text-2xl text-slate-900 block mt-1 tabular-nums">
-                  ₹{FINANCIAL_METRICS.sales.toLocaleString('en-IN')}
+                  ₹{Math.round(thisMonthSales).toLocaleString('en-IN')}
                 </span>
                 <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">
-                  +12.4% vs last month
+                  Single source of truth
                 </span>
               </div>
 
@@ -126,10 +139,10 @@ export const ReportsScreen: React.FC = () => {
                   − Cost of Goods Sold
                 </span>
                 <span className="font-heading font-bold text-2xl text-slate-700 block mt-1 tabular-nums">
-                  ₹{FINANCIAL_METRICS.purchases.toLocaleString('en-IN')}
+                  ₹{Math.round(thisMonthPurchases).toLocaleString('en-IN')}
                 </span>
                 <span className="text-[11px] text-slate-500 mt-1 block">
-                  67.4% of total sales
+                  Supplier consignments
                 </span>
               </div>
 
@@ -139,10 +152,10 @@ export const ReportsScreen: React.FC = () => {
                   − Operating Expenses
                 </span>
                 <span className="font-heading font-bold text-2xl text-slate-700 block mt-1 tabular-nums">
-                  ₹{FINANCIAL_METRICS.expenses.toLocaleString('en-IN')}
+                  ₹{Math.round(thisMonthExpenses).toLocaleString('en-IN')}
                 </span>
                 <span className="text-[11px] text-slate-500 mt-1 block">
-                  Shop rent, tea, tempo freight
+                  Shop rent, tea, freight
                 </span>
               </div>
 
@@ -152,10 +165,10 @@ export const ReportsScreen: React.FC = () => {
                   = Net Profit (Pre-Tax)
                 </span>
                 <span className="font-heading font-extrabold text-2xl text-emerald-300 block mt-1 tabular-nums">
-                  ₹{FINANCIAL_METRICS.netProfit.toLocaleString('en-IN')}
+                  ₹{Math.round(thisMonthNetProfit).toLocaleString('en-IN')}
                 </span>
                 <span className="text-[11px] text-emerald-400 font-bold mt-1 block">
-                  22.5% Net Profit Margin
+                  {thisMonthSales > 0 ? `${Math.round((thisMonthNetProfit / thisMonthSales) * 100)}% Margin` : '0% Margin'}
                 </span>
               </div>
             </div>
@@ -208,16 +221,21 @@ export const ReportsScreen: React.FC = () => {
                     </tr>
                     <tr className="font-semibold text-slate-900 bg-slate-50/50">
                       <td className="py-2.5 px-3">Operating Expenses</td>
-                      <td className="py-2.5 px-3 text-slate-500">Overhead Outflows</td>
-                      <td className="py-2.5 px-3 text-right font-mono text-rose-600">−₹1,24,500</td>
-                      <td className="py-2.5 px-3 text-right font-mono">10.0%</td>
+                      <td className="py-2.5 px-3 text-right font-mono text-rose-600">
+                        −₹{Math.round(thisMonthExpenses).toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono">
+                        {thisMonthSales > 0 ? `${((thisMonthExpenses / thisMonthSales) * 100).toFixed(1)}%` : '0%'}
+                      </td>
                     </tr>
-                    {INITIAL_EXPENSES.map((exp) => (
+                    {storeData.expenses.slice(0, 8).map((exp) => (
                       <tr key={exp.id} className="text-slate-600">
                         <td className="py-2 px-3 pl-6">{exp.title} ({exp.vendor})</td>
                         <td className="py-2 px-3 text-slate-400">{exp.category}</td>
                         <td className="py-2 px-3 text-right font-mono">−₹{exp.amount.toLocaleString('en-IN')}</td>
-                        <td className="py-2 px-3 text-right font-mono text-slate-400">0.8%</td>
+                        <td className="py-2 px-3 text-right font-mono text-slate-400">
+                          {thisMonthSales > 0 ? `${((exp.amount / thisMonthSales) * 100).toFixed(1)}%` : '0%'}
+                        </td>
                       </tr>
                     ))}
                     <tr className="font-extrabold text-slate-900 bg-slate-100 text-sm">
@@ -251,7 +269,7 @@ export const ReportsScreen: React.FC = () => {
             <div className="text-right">
               <span className="text-xs text-slate-500 block">Total Due Across All Parties:</span>
               <span className="font-heading font-bold text-xl text-rose-600 font-mono">
-                ₹{FINANCIAL_METRICS.receivables.toLocaleString('en-IN')}
+                ₹{Math.round(toCollect).toLocaleString('en-IN')}
               </span>
             </div>
           </div>
@@ -269,43 +287,51 @@ export const ReportsScreen: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {MOCK_CUSTOMERS.map((cust) => (
-                  <tr key={cust.id} className="hover:bg-slate-50/80">
-                    <td className="py-3 px-3">
-                      <span className="font-semibold text-slate-900 block">{cust.name}</span>
-                      <span className="text-[11px] text-slate-500">
-                        Prop: {cust.proprietor} • {cust.phone}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-600">{cust.category}</td>
-                    <td className="py-3 px-3 text-right font-mono text-slate-600">
-                      ₹{cust.creditLimit.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono text-slate-600">
-                      ₹{cust.totalPurchases.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-rose-600">
-                      ₹{cust.outstandingBalance.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          cust.outstandingBalance === 0
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : cust.isOverdue
-                            ? 'bg-rose-50 text-rose-800 border-rose-200'
-                            : 'bg-amber-50 text-amber-800 border-amber-200'
-                        }`}
-                      >
-                        {cust.outstandingBalance === 0
-                          ? 'CLEARED'
-                          : cust.isOverdue
-                          ? `${cust.overdueDays}D OVERDUE`
-                          : 'PENDING'}
-                      </span>
+                {storeData.customers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
+                      No customers added yet. All accounts clear.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  storeData.customers.map((cust) => (
+                    <tr key={cust.id} className="hover:bg-slate-50/80">
+                      <td className="py-3 px-3">
+                        <span className="font-semibold text-slate-900 block">{cust.name}</span>
+                        <span className="text-[11px] text-slate-500">
+                          Prop: {cust.proprietor} • {cust.phone}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600">{cust.category || 'Retail'}</td>
+                      <td className="py-3 px-3 text-right font-mono text-slate-600">
+                        ₹{cust.creditLimit.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono text-slate-600">
+                        ₹{cust.totalPurchases.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono font-bold text-rose-600">
+                        ₹{cust.outstandingBalance.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                            cust.outstandingBalance === 0
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : cust.isOverdue
+                              ? 'bg-rose-50 text-rose-800 border-rose-200'
+                              : 'bg-amber-50 text-amber-800 border-amber-200'
+                          }`}
+                        >
+                          {cust.outstandingBalance === 0
+                            ? 'CLEARED'
+                            : cust.isOverdue
+                            ? `${cust.overdueDays}D OVERDUE`
+                            : 'PENDING'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

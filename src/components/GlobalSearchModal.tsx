@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, User, Package, FileText, ArrowRight, CornerDownLeft } from 'lucide-react';
-import { MOCK_CUSTOMERS, MOCK_PRODUCTS, INVOICE_DETAILS } from '../data/mockData';
+import { INVOICE_DETAILS } from '../data/mockData';
 import { ScreenMode } from '../types';
+import { useStore } from '../context/StoreContext';
 
 interface GlobalSearchModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   onSelectInvoice,
   onNavigate,
 }) => {
+  const { storeData, setActiveCustomerId } = useStore();
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -37,22 +39,22 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   const cleanQuery = query.toLowerCase().trim();
 
   const matchingCustomers = cleanQuery
-    ? MOCK_CUSTOMERS.filter(
+    ? storeData.customers.filter(
         (c) =>
           c.name.toLowerCase().includes(cleanQuery) ||
           c.proprietor.toLowerCase().includes(cleanQuery) ||
           c.phone.includes(cleanQuery)
       )
-    : MOCK_CUSTOMERS.slice(0, 3);
+    : storeData.customers.slice(0, 3);
 
   const matchingProducts = cleanQuery
-    ? MOCK_PRODUCTS.filter(
+    ? storeData.products.filter(
         (p) =>
           p.name.toLowerCase().includes(cleanQuery) ||
           p.sku.toLowerCase().includes(cleanQuery) ||
           p.barcode.includes(cleanQuery)
       )
-    : MOCK_PRODUCTS.slice(0, 3);
+    : storeData.products.slice(0, 3);
 
   const invoiceList = Object.values(INVOICE_DETAILS);
   const matchingInvoices = cleanQuery
@@ -62,6 +64,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           (inv.customerName && inv.customerName.toLowerCase().includes(cleanQuery))
       )
     : invoiceList.slice(0, 2);
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
@@ -107,6 +110,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   <button
                     key={cust.id}
                     onClick={() => {
+                      setActiveCustomerId(cust.id);
                       onSelectCustomer(cust.id);
                       onNavigate('khata');
                       onClose();

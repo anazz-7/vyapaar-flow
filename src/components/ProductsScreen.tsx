@@ -13,14 +13,16 @@ import {
   CheckCircle2,
   Boxes,
 } from 'lucide-react';
-import { MOCK_PRODUCTS } from '../data/mockData';
 import { ProductItem } from '../types';
+import { useStore } from '../context/StoreContext';
 
 export const ProductsScreen: React.FC = () => {
-  const [products, setProducts] = useState<ProductItem[]>(MOCK_PRODUCTS);
+  const { storeData, addProduct, totalStockValue, lowStockCount } = useStore();
+  const products = storeData.products;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(products[0]);
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(products[0] || null);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
 
   // New product form state
@@ -43,12 +45,6 @@ export const ProductsScreen: React.FC = () => {
       p.barcode.includes(searchQuery);
     return matchesCat && matchesSearch;
   });
-
-  const totalStockValue = products.reduce(
-    (sum, p) => sum + p.currentStock * p.purchasePrice,
-    0
-  );
-  const lowStockCount = products.filter((p) => p.currentStock <= p.minStock).length;
 
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +72,7 @@ export const ProductsScreen: React.FC = () => {
       adjustmentsQty: 0,
     };
 
-    setProducts((prev) => [newProduct, ...prev]);
+    addProduct(newProduct);
     setSelectedProduct(newProduct);
     setShowAddProductModal(false);
     setNewProdName('');

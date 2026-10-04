@@ -16,9 +16,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  BadgeAlert,
+  Database,
+  AlertTriangle,
 } from 'lucide-react';
-import { ASSETS } from '../data/mockData';
+import { useStore } from '../context/StoreContext';
 
 interface NavItem {
   id: ScreenMode;
@@ -49,6 +50,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
   onOpenQuickBilling,
 }) => {
+  const { storeData, toCollect, lowStockCount, backupWarning, lastSavedTime } = useStore();
+
+  const khataAlert =
+    toCollect > 0
+      ? `₹${
+          toCollect >= 100000
+            ? (toCollect / 100000).toFixed(1) + 'L'
+            : toCollect >= 1000
+            ? (toCollect / 1000).toFixed(1) + 'k'
+            : Math.round(toCollect).toLocaleString('en-IN')
+        } Due`
+      : undefined;
+
+  const stockAlert = lowStockCount > 0 ? `${lowStockCount} Low` : undefined;
+
   const navSections: NavSection[] = [
     {
       label: 'BUSINESS',
@@ -68,8 +84,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       label: 'MANAGEMENT',
       items: [
-        { id: 'products' as ScreenMode, label: 'Products & Stock', icon: Package, badgeAlert: '3 Low' },
-        { id: 'khata' as ScreenMode, label: 'Customers (Khata)', icon: Users, badgeAlert: '₹14.2k Due' },
+        { id: 'products' as ScreenMode, label: 'Products & Stock', icon: Package, badgeAlert: stockAlert },
+        { id: 'khata' as ScreenMode, label: 'Customers (Khata)', icon: Users, badgeAlert: khataAlert },
         { id: 'khata' as ScreenMode, label: 'Suppliers', icon: Building2 },
         { id: 'dashboard' as ScreenMode, label: 'Employees', icon: UserCheck },
       ],
@@ -89,6 +105,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
+  const backupSubtitle = storeData.lastBackupDate
+    ? `Backup: ${new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(
+        new Date(storeData.lastBackupDate)
+      )}`
+    : 'No backup yet';
+
   return (
     <aside
       className={`hidden md:flex flex-col bg-white border-r border-slate-200 transition-all duration-200 select-none z-30 flex-shrink-0 ${
@@ -107,7 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 Vyapaar Flow
               </span>
               <span className="text-[11px] text-slate-500 font-medium truncate">
-                BM Super Mart
+                {storeData.settings.storeName || 'BM Super Mart'}
               </span>
             </div>
           </div>
@@ -229,20 +251,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Business Status Footer */}
+      {/* Honest Local Sync Status Footer */}
       {!isCollapsed && (
         <div className="p-3 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-slate-200/80 shadow-2xs">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <button
+            onClick={() => onNavigate('settings')}
+            className="w-full text-left flex items-center gap-2.5 p-2 rounded-lg bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-colors cursor-pointer group"
+          >
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100 flex-shrink-0" />
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[11px] font-semibold text-slate-800 truncate">
-                Cloud Sync Active
+              <span className="text-[11px] font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                Saved on this device
               </span>
-              <span className="text-[10px] text-slate-500">Auto-saved 1m ago</span>
+              <div className="flex items-center gap-1 text-[10px] text-slate-500 truncate">
+                <span>{backupSubtitle}</span>
+                {backupWarning && (
+                  <span className="text-amber-600 font-semibold flex items-center gap-0.5">
+                    • Backup due
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          </button>
         </div>
       )}
     </aside>
   );
 };
+

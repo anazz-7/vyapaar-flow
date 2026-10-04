@@ -17,6 +17,7 @@ import {
   Tag,
   CreditCard,
 } from 'lucide-react';
+import { useStore } from '../context/StoreContext';
 
 interface DayBookScreenProps {
   expenses: ExpenseEntry[];
@@ -33,14 +34,35 @@ export const DayBookScreen: React.FC<DayBookScreenProps> = ({
   onCountCash,
   onBankDeposit,
 }) => {
+  const { storeData, getDayBookForDate } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
 
-  const dates = [
-    'Today, 24 Oct 2024',
-    'Yesterday, 23 Oct 2024',
-    'Tue, 22 Oct 2024',
+  // Real dynamic dates (Today, Yesterday, Day Before)
+  const now = new Date();
+  const dateList = [
+    {
+      key: now.toISOString().split('T')[0],
+      label: `Today, ${new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(now)}`,
+    },
+    {
+      key: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+      label: `Yesterday, ${new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(
+        new Date(Date.now() - 86400000)
+      )}`,
+    },
+    {
+      key: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
+      label: new Intl.DateTimeFormat('en-IN', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      }).format(new Date(Date.now() - 86400000 * 2)),
+    },
   ];
+
+  const currentDateObj = dateList[currentDateIndex] || dateList[0];
+  const dayBookRecord = getDayBookForDate(currentDateObj.key);
 
   const categories = ['All', 'Transport', 'Staff Tea', 'Rent / Advance', 'Packaging', 'Electricity'];
 
@@ -49,13 +71,12 @@ export const DayBookScreen: React.FC<DayBookScreenProps> = ({
     return exp.category.toLowerCase().includes(selectedCategory.toLowerCase());
   });
 
-  const totalExpenseAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+  // Real Cash Drawer equation
+  const openingCash = dayBookRecord.openingCash;
+  const cashIn = dayBookRecord.cashIn;
+  const cashOut = dayBookRecord.cashOut;
+  const closingCash = dayBookRecord.closingCash;
 
-  // Cash Drawer equation
-  const openingCash = 42500;
-  const cashIn = 47150;
-  const cashOut = totalExpenseAmount;
-  const closingCash = openingCash + cashIn - cashOut;
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -74,7 +95,7 @@ export const DayBookScreen: React.FC<DayBookScreenProps> = ({
           {/* Date Navigator */}
           <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
             <button
-              onClick={() => setCurrentDateIndex((p) => Math.min(p + 1, dates.length - 1))}
+              onClick={() => setCurrentDateIndex((p) => Math.min(p + 1, dateList.length - 1))}
               className="p-1.5 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100"
               title="Previous Day"
             >
@@ -82,7 +103,7 @@ export const DayBookScreen: React.FC<DayBookScreenProps> = ({
             </button>
             <div className="px-2.5 py-1 text-xs font-semibold text-slate-800 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <span>{dates[currentDateIndex]}</span>
+              <span>{dateList[currentDateIndex].label}</span>
             </div>
             <button
               onClick={() => setCurrentDateIndex((p) => Math.max(p - 1, 0))}

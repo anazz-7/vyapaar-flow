@@ -14,10 +14,9 @@ import {
 } from './types';
 import {
   INITIAL_PARTY,
-  INITIAL_LEDGER_ENTRIES,
-  INITIAL_EXPENSES,
   DEFAULT_PAYMENT_SUBMISSION,
 } from './data/mockData';
+import { useStore } from './context/StoreContext';
 
 // Core Components
 import { Sidebar } from './components/Sidebar';
@@ -46,12 +45,17 @@ import { NewBillModal } from './components/NewBillModal';
 import { BillDetailModal } from './components/BillDetailModal';
 
 export default function App() {
+  const {
+    storeData,
+    activeCustomer,
+    cashInHand,
+    addSaleBill,
+    recordPayment,
+    addExpense,
+  } = useStore();
+
   const [currentScreen, setCurrentScreen] = useState<ScreenMode>('dashboard');
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [party, setParty] = useState(INITIAL_PARTY);
-  const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>(INITIAL_LEDGER_ENTRIES);
-  const [expenses, setExpenses] = useState<ExpenseEntry[]>(INITIAL_EXPENSES);
-  const [netCash, setNetCash] = useState(85400);
   const [latestSubmission, setLatestSubmission] = useState<PaymentSubmission>(DEFAULT_PAYMENT_SUBMISSION);
 
   // Modals & Drawers state
@@ -66,8 +70,13 @@ export default function App() {
 
   // Layout states
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isMobileFrame, setIsMobileFrame] = useState(false);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
+
+  // Current active customer fallback
+  const party = activeCustomer || storeData.customers[0] || INITIAL_PARTY;
+  const ledgerEntries = storeData.ledgerEntries;
+  const expenses = storeData.expenses;
+  const netCash = cashInHand;
 
   // Toast Helper
   const addToast = (toast: Omit<ToastNotification, 'id'>) => {
@@ -124,60 +133,12 @@ export default function App() {
     setLatestSubmission(submission);
     setIsRecordPaymentOpen(false);
 
-    // Snapshot for Undo
-    const previousParty = { ...party };
-    const previousEntries = [...ledgerEntries];
-    const previousNetCash = netCash;
-
-    // Update Party state
-    setParty((prev) => ({
-      ...prev,
-      outstandingBalance: submission.remainingBalance,
-      isOverdue: submission.remainingBalance > 0,
-      totalPaid: prev.totalPaid + submission.amount,
-    }));
-
-    // Add entry to Ledger
-    const newLedgerEntry: LedgerEntry = {
-      id: `entry-${Date.now()}`,
-      type: 'payment',
-      tag:
-        submission.paymentMode === 'Cash'
-          ? 'CASH'
-          : submission.paymentMode === 'UPI / QR'
-          ? 'ONLINE UPI'
-          : 'BANK',
-      amount: -submission.amount,
-      dateStr: submission.dateStr,
-      timeStr: submission.timeStr,
-      description: 'Payment Received',
-      note: submission.note,
-      receiptNumber: submission.receiptId.replace('#REC-', ''),
-      balance: submission.remainingBalance,
-      status: 'PAID',
-    };
-
-    setLedgerEntries((prev) => [newLedgerEntry, ...prev]);
-
-    // If paid by cash, update drawer cash
-    if (submission.paymentMode === 'Cash') {
-      setNetCash((prev) => prev + submission.amount);
-    }
+    recordPayment(submission);
 
     addToast({
       title: `Payment ₹${submission.amount.toLocaleString('en-IN')} Received`,
-      message: `Voucher ${submission.receiptId} added to passbook.`,
+      message: `Voucher ${submission.receiptId} added to passbook and Day Book cash.`,
       type: 'success',
-      undoLabel: 'Undo',
-      undoAction: () => {
-        setParty(previousParty);
-        setLedgerEntries(previousEntries);
-        setNetCash(previousNetCash);
-        addToast({
-          title: 'Payment entry undone',
-          type: 'info',
-        });
-      },
     });
 
     // Navigate to Screen 3 (Payment Recorded / Voucher)
@@ -186,65 +147,33 @@ export default function App() {
 
   // New Sale Bill
   const handleSaveBill = (entry: LedgerEntry) => {
-    const previousParty = { ...party };
-    const previousEntries = [...ledgerEntries];
-
-    setLedgerEntries((prev) => [entry, ...prev]);
-
-    if (entry.tag === 'UDHAAR') {
-      setParty((prev) => ({
-        ...prev,
-        outstandingBalance: prev.outstandingBalance + entry.amount,
-        totalPurchases: prev.totalPurchases + entry.amount,
-      }));
-    }
+    addSaleBill(entry, party?.id);
 
     addToast({
       title: `Sale Bill #${entry.billNumber} Saved`,
       message: `Amount ₹${entry.amount.toLocaleString('en-IN')} (${entry.tag || 'CASH'})`,
       type: 'success',
-      undoLabel: 'Undo',
-      undoAction: () => {
-        setParty(previousParty);
-        setLedgerEntries(previousEntries);
-        addToast({
-          title: 'Sale bill cancelled',
-          type: 'info',
-        });
-      },
     });
   };
 
   // Add Expense
   const handleSaveExpense = (newExp: ExpenseEntry) => {
-    const previousExpenses = [...expenses];
-    const previousCash = netCash;
-
-    setExpenses((prev) => [newExp, ...prev]);
-
-    if (newExp.paymentMode === 'Cash Counter') {
-      setNetCash((prev) => Math.max(0, prev - newExp.amount));
-    }
+    addExpense(newExp);
 
     addToast({
       title: `Expense ${newExp.expNumber} Logged`,
       message: `−₹${newExp.amount.toLocaleString('en-IN')} (${newExp.title})`,
       type: 'success',
-      undoLabel: 'Undo',
-      undoAction: () => {
-        setExpenses(previousExpenses);
-        setNetCash(previousCash);
-        addToast({
-          title: 'Expense voucher undone',
-          type: 'info',
-        });
-      },
     });
   };
 
   // WhatsApp reminder
   const handleSendWhatsAppReminder = () => {
-    const text = `Dear ${party.proprietor} (${party.name}), this is a gentle payment reminder from BM Super Mart. Your outstanding khata balance of ₹${party.outstandingBalance.toLocaleString('en-IN')} is due. Kindly clear the bill at your earliest convenience. Thank you!`;
+    const text = `Dear ${party.proprietor} (${party.name}), this is a gentle payment reminder from ${
+      storeData.settings.storeName || 'BM Super Mart'
+    }. Your outstanding khata balance of ₹${party.outstandingBalance.toLocaleString(
+      'en-IN'
+    )} is due. Kindly clear the bill at your earliest convenience. Thank you!`;
     const phoneClean = party.phone.replace(/[^0-9]/g, '');
     window.open(`https://api.whatsapp.com/send?phone=${phoneClean}&text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -258,16 +187,17 @@ export default function App() {
         onBack: () => setCurrentScreen('khata'),
       };
     }
-    if (currentScreen === 'khata') {
+    if (currentScreen === 'sales') {
       return {
-        title: 'Customer Khata - Asra Fruits & Nuts',
+        title: 'Point of Sale (POS)',
         showBack: true,
         onBack: () => setCurrentScreen('dashboard'),
       };
     }
-    if (currentScreen === 'sales') {
+    if (currentScreen === 'khata') {
       return {
-        title: 'High-Speed Billing & POS',
+        title: `${party.name} - Ledger Passbook`,
+        subtitle: `Prop: ${party.proprietor} • ${party.phone}`,
         showBack: true,
         onBack: () => setCurrentScreen('dashboard'),
       };
@@ -275,13 +205,14 @@ export default function App() {
     if (currentScreen === 'daybook') {
       return {
         title: 'Cash Day Book (Roker)',
+        subtitle: `Drawer Cash: ₹${netCash.toLocaleString('en-IN')}`,
         showBack: true,
         onBack: () => setCurrentScreen('dashboard'),
       };
     }
     if (currentScreen === 'products') {
       return {
-        title: 'Products & Stock Inventory',
+        title: 'Products & Inventory',
         showBack: true,
         onBack: () => setCurrentScreen('dashboard'),
       };
@@ -295,7 +226,7 @@ export default function App() {
     }
     if (currentScreen === 'settings') {
       return {
-        title: 'Settings & Rules',
+        title: 'Settings & Data Management',
         showBack: true,
         onBack: () => setCurrentScreen('dashboard'),
       };
@@ -323,36 +254,23 @@ export default function App() {
         onNavigate={handleSelectScreen}
       />
 
-      {/* Main Container - Desktop Workspace or Framed Mobile Preview */}
-      <div
-        className={
-          isMobileFrame
-            ? 'flex-1 flex justify-center items-start py-8 px-4 bg-slate-900/10 min-h-screen'
-            : 'flex-1 flex flex-row w-full min-h-screen'
-        }
-      >
+      {/* Main Container - Full-width Desktop Workspace or Mobile */}
+      <div className="flex-1 flex flex-row w-full min-h-screen">
         {/* Modern Sidebar (Desktop Workspace View) */}
-        {!isMobileFrame && (
-          <Sidebar
-            currentScreen={currentScreen}
-            onNavigate={handleSelectScreen}
-            isCollapsed={isSidebarCollapsed}
-            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            onOpenQuickBilling={() => setCurrentScreen('sales')}
-          />
-        )}
+        <Sidebar
+          currentScreen={currentScreen}
+          onNavigate={handleSelectScreen}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onOpenQuickBilling={() => setCurrentScreen('sales')}
+        />
 
         {/* Workspace Shell */}
-        <div
-          className={
-            isMobileFrame
-              ? 'w-full max-w-[420px] bg-white rounded-[40px] shadow-2xl border-[8px] border-slate-900 overflow-hidden relative min-h-[880px] flex flex-col'
-              : 'flex-1 flex flex-col min-w-0 bg-slate-50'
-          }
-        >
+        <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
           {/* Top Bar Header */}
           <Header
             title={headerProps.title}
+            subtitle={headerProps.subtitle}
             showBack={headerProps.showBack}
             onBack={headerProps.onBack}
             screenMode={currentScreen}
@@ -361,8 +279,6 @@ export default function App() {
             onOpenQuickSale={() => setCurrentScreen('sales')}
             onOpenRecordPayment={() => setIsRecordPaymentOpen(true)}
             onOpenAddExpense={() => setIsAddExpenseOpen(true)}
-            isMobileFrame={isMobileFrame}
-            onToggleMobileFrame={setIsMobileFrame}
           />
 
           {/* Screen Content Body */}
@@ -460,7 +376,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Invoice Detail Side Drawer (Section 14) */}
+      {/* Invoice Detail Side Drawer */}
       <InvoiceDrawer
         billNo={viewingBillNo}
         onClose={() => setViewingBillNo(null)}
