@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ExpenseEntry } from '../types';
+import { Receipt, X, Check, Tag, CreditCard, Wallet, Building2, QrCode } from 'lucide-react';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -44,33 +45,54 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     onClose();
   };
 
+  const categories: ExpenseEntry['category'][] = [
+    'Transport',
+    'Staff Tea',
+    'Rent / Advance',
+    'Packaging',
+    'Electricity',
+    'Other',
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/60 backdrop-blur-xs">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-md w-full p-4 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto border border-outline-variant/30">
-        <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
+      <div
+        className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
+              <Receipt className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-[15px] text-on-surface">Add Outflow Expense</h3>
-              <p className="text-[11px] text-on-surface-variant">Records money paid out of shop drawer</p>
+              <h2 className="font-heading font-bold text-base text-slate-900">
+                Log Outflow Expense
+              </h2>
+              <p className="text-xs text-slate-500">
+                Records money paid out of shop counter
+              </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-[12px]">
-          {/* Amount */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Amount (₹)</label>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto">
+          {/* Amount Input */}
+          <div className="space-y-1">
+            <label className="font-bold uppercase tracking-wider text-slate-500 text-[10px] block">
+              Expense Amount (₹)
+            </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading font-bold text-[20px] text-error">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading font-bold text-rose-600 text-lg">
                 ₹
               </span>
               <input
@@ -80,106 +102,109 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 placeholder="0"
-                className="w-full bg-surface-container-low border border-outline-variant/40 rounded-xl pl-9 pr-3 py-2.5 font-heading font-extrabold text-[20px] text-on-surface focus:outline-none focus:border-error"
+                className="w-full h-11 pl-8 pr-3 rounded-xl border border-slate-200 bg-white font-heading font-bold text-xl text-rose-600 tabular-nums outline-hidden focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
               />
             </div>
           </div>
 
-          {/* Title */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Expense Title</label>
+          {/* Expense Title */}
+          <div className="space-y-1">
+            <label className="font-semibold text-slate-700 block">Expense Title</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Mandi Auto Tempo Delivery"
-              className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2 text-on-surface focus:outline-none focus:border-primary"
+              placeholder="e.g. Mandi Tempo Transport, Staff Tea & Samosa"
+              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 font-medium text-xs text-slate-900"
             />
           </div>
 
-          {/* Vendor */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Vendor / Handed To</label>
+          {/* Vendor / Payee */}
+          <div className="space-y-1">
+            <label className="font-semibold text-slate-700 block">Vendor / Payee</label>
             <input
               type="text"
               value={vendor}
               onChange={(e) => setVendor(e.target.value)}
-              placeholder="e.g. Ramu Auto Driver"
-              className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2 text-on-surface focus:outline-none focus:border-primary"
+              placeholder="e.g. Ramu Auto Tempo, Sharma Tea Stall"
+              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 font-medium text-xs text-slate-900"
             />
           </div>
 
-          {/* Category */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Category</label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {(['Transport', 'Staff Tea', 'Rent / Advance', 'Packaging', 'Electricity', 'Other'] as const).map(
-                (cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all ${
-                      category === cat
-                        ? 'bg-primary text-on-primary font-bold shadow-xs'
-                        : 'bg-surface-container-low text-on-surface border border-outline-variant/20'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Payment Mode */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Paid From</label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {(['Cash Counter', 'UPI / PhonePe', 'Bank Transfer (IMPS)', 'Cheque'] as const).map((mode) => (
+          {/* Category Chips */}
+          <div className="space-y-1.5">
+            <label className="font-semibold text-slate-700 block">Category</label>
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((cat) => (
                 <button
-                  key={mode}
+                  key={cat}
                   type="button"
-                  onClick={() => setPaymentMode(mode)}
-                  className={`py-2 px-2.5 rounded-lg text-[11px] font-medium text-left transition-all ${
-                    paymentMode === mode
-                      ? 'bg-secondary-container text-on-secondary-container font-bold border border-secondary'
-                      : 'bg-surface-container-low text-on-surface border border-outline-variant/20'
+                  onClick={() => setCategory(cat)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
+                    category === cat
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  {mode}
+                  {cat}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Reference / Note */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Bill / UTR Ref (Optional)</label>
+          {/* Payment Mode */}
+          <div className="space-y-1">
+            <label className="font-semibold text-slate-700 block">Paid From</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'Cash Counter', label: 'Cash Drawer' },
+                { id: 'UPI / PhonePe', label: 'UPI / PhonePe' },
+                { id: 'Bank Transfer (IMPS)', label: 'Bank IMPS' },
+                { id: 'Cheque', label: 'Cheque' },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setPaymentMode(m.id as any)}
+                  className={`py-1.5 px-2 rounded-lg border text-xs font-medium text-center transition-colors ${
+                    paymentMode === m.id
+                      ? 'bg-slate-900 text-white border-slate-900 font-semibold'
+                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Reference No */}
+          <div className="space-y-1">
+            <label className="font-semibold text-slate-700 block">Bill / UTR Reference (Optional)</label>
             <input
               type="text"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              placeholder="e.g. UTR #129038 or Slip Signed"
-              className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2 text-on-surface focus:outline-none focus:border-primary"
+              placeholder="e.g. UTR #928174 or Bill #45"
+              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 font-medium text-xs text-slate-900 font-mono"
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl bg-surface-container text-on-surface font-medium"
+              className="px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-error text-on-error font-heading font-bold shadow-sm"
+              className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-semibold shadow-xs"
             >
-              Save Expense
+              Save Outflow Voucher
             </button>
           </div>
         </form>

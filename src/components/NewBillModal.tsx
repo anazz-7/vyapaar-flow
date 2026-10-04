@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LedgerEntry } from '../types';
+import { ShoppingCart, X, Check } from 'lucide-react';
 
 interface NewBillModalProps {
   isOpen: boolean;
@@ -16,9 +17,9 @@ export const NewBillModal: React.FC<NewBillModalProps> = ({
   onSaveBill,
   currentBalance,
 }) => {
-  const [billNo, setBillNo] = useState(`INV-${Math.floor(1025 + Math.random() * 20)}`);
+  const [billNo, setBillNo] = useState(`INV-${Math.floor(1028 + Math.random() * 50)}`);
   const [amountStr, setAmountStr] = useState('');
-  const [itemsSummary, setItemsSummary] = useState('California Almonds (5kg), Cashews (2kg)');
+  const [itemsSummary, setItemsSummary] = useState('California Almonds (5kg), Whole Cashews (2kg)');
   const [itemsCount, setItemsCount] = useState('2 items');
   const [isUdhaar, setIsUdhaar] = useState(true);
 
@@ -43,6 +44,7 @@ export const NewBillModal: React.FC<NewBillModalProps> = ({
       itemsSummary,
       itemsCount,
       balance: newBalance,
+      status: isUdhaar ? 'PENDING' : 'PAID',
     };
 
     onSaveBill(newEntry);
@@ -50,131 +52,142 @@ export const NewBillModal: React.FC<NewBillModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/60 backdrop-blur-xs">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-md w-full p-4 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto border border-outline-variant/30">
-        <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-error-container text-error flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
+      <div
+        className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+              <ShoppingCart className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-[15px] text-on-surface">New Sale Bill (You Gave)</h3>
-              <p className="text-[11px] text-on-surface-variant">Party: {partyName}</p>
+              <h2 className="font-heading font-bold text-base text-slate-900">
+                Quick Sale Bill (You Gave)
+              </h2>
+              <p className="text-xs text-slate-500">
+                Party: {partyName}
+              </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-[12px]">
-          {/* Bill No & Credit Type */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-bold text-on-surface-variant uppercase">Invoice No</label>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto">
+          {/* Bill No & Mode */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold uppercase tracking-wider text-slate-500 text-[10px] block">
+                Bill Number
+              </label>
               <input
                 type="text"
                 required
                 value={billNo}
                 onChange={(e) => setBillNo(e.target.value)}
-                className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2 text-on-surface font-mono font-bold"
+                className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 font-mono font-bold text-xs text-slate-900"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-bold text-on-surface-variant uppercase">Payment Type</label>
-              <div className="flex rounded-xl bg-surface-container-low p-1 border border-outline-variant/20">
+            <div className="space-y-1">
+              <label className="font-bold uppercase tracking-wider text-slate-500 text-[10px] block">
+                Payment Type
+              </label>
+              <div className="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
                 <button
                   type="button"
                   onClick={() => setIsUdhaar(true)}
-                  className={`flex-1 py-1.5 rounded-lg font-bold text-[11px] transition-all ${
-                    isUdhaar ? 'bg-error text-white' : 'text-on-surface-variant'
+                  className={`flex-1 py-1 rounded-md text-xs font-semibold transition-colors ${
+                    isUdhaar ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600'
                   }`}
                 >
-                  Udhaar (Credit)
+                  Udhaar
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsUdhaar(false)}
-                  className={`flex-1 py-1.5 rounded-lg font-bold text-[11px] transition-all ${
-                    !isUdhaar ? 'bg-secondary text-white' : 'text-on-surface-variant'
+                  className={`flex-1 py-1 rounded-md text-xs font-semibold transition-colors ${
+                    !isUdhaar ? 'bg-slate-900 text-white shadow-2xs' : 'text-slate-600'
                   }`}
                 >
-                  Cash Paid
+                  Cash / UPI
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Amount */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Total Bill Amount (₹)</label>
+          {/* Amount Input */}
+          <div className="space-y-1">
+            <label className="font-bold uppercase tracking-wider text-slate-500 text-[10px] block">
+              Bill Total Amount (₹)
+            </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading font-bold text-[20px] text-error">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading font-bold text-slate-400 text-lg">
                 ₹
               </span>
               <input
                 type="number"
                 min="1"
                 required
+                autoFocus
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 placeholder="0"
-                className="w-full bg-surface-container-low border border-outline-variant/40 rounded-xl pl-9 pr-3 py-2.5 font-heading font-extrabold text-[20px] text-on-surface focus:outline-none focus:border-error"
+                className="w-full h-11 pl-8 pr-3 rounded-xl border border-slate-200 bg-white font-heading font-bold text-xl text-slate-900 tabular-nums outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
 
           {/* Items Summary */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Items Description</label>
+          <div className="space-y-1">
+            <label className="font-semibold text-slate-700 block">Items Summary</label>
             <input
               type="text"
-              required
               value={itemsSummary}
               onChange={(e) => setItemsSummary(e.target.value)}
-              placeholder="e.g. Almonds (10kg), Cashews (5kg)"
-              className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2 text-on-surface focus:outline-none focus:border-primary"
+              placeholder="e.g. Almonds (5kg), Cashews (2kg)"
+              className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 font-medium text-xs text-slate-900"
             />
           </div>
 
-          {/* Items count badge */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Total Quantity / Pack</label>
-            <input
-              type="text"
-              value={itemsCount}
-              onChange={(e) => setItemsCount(e.target.value)}
-              placeholder="e.g. 4 items or 6 Cartons"
-              className="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2 text-on-surface focus:outline-none focus:border-primary"
-            />
-          </div>
-
-          {/* New Balance Preview */}
-          <div className="p-2.5 rounded-xl bg-surface-container border border-outline-variant/20 flex items-center justify-between">
-            <span className="text-on-surface-variant">New Customer Balance:</span>
-            <span className="font-heading font-extrabold text-[14px] text-error">
-              ₹{(currentBalance + (isUdhaar ? parseInt(amountStr, 10) || 0 : 0)).toLocaleString('en-IN')}
-            </span>
-          </div>
+          {/* Total Preview */}
+          {amountStr && parseInt(amountStr, 10) > 0 && (
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+              <div>
+                <span className="font-semibold text-slate-700 block">New Customer Balance:</span>
+                <span className="text-[11px] text-slate-500">
+                  {isUdhaar ? 'Added to credit passbook' : 'Cleared on counter'}
+                </span>
+              </div>
+              <span className="font-heading font-bold text-base text-slate-900 tabular-nums">
+                ₹{(isUdhaar ? currentBalance + (parseInt(amountStr, 10) || 0) : currentBalance).toLocaleString('en-IN')}
+              </span>
+            </div>
+          )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl bg-surface-container text-on-surface font-medium"
+              className="px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-error text-on-error font-heading font-bold shadow-sm"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold shadow-xs"
             >
-              Save Sale Bill
+              Create Sale Bill
             </button>
           </div>
         </form>

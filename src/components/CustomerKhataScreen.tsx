@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
 import { Party, LedgerEntry } from '../types';
+import {
+  Phone,
+  MessageSquare,
+  Share2,
+  FileText,
+  Plus,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Filter,
+  CreditCard,
+  Building2,
+  ChevronRight,
+  MoreVertical,
+} from 'lucide-react';
 
 interface CustomerKhataScreenProps {
   party: Party;
@@ -22,440 +39,362 @@ export const CustomerKhataScreen: React.FC<CustomerKhataScreenProps> = ({
   onViewStatementPdf,
   onShareReceipt,
 }) => {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'this_month' | 'last_30' | 'custom'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'sales' | 'payments'>('all');
   const [showOptionsDropdown, setShowOptionsDropdown] = useState(false);
 
   const filteredEntries = entries.filter((entry) => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'this_month') return entry.dateStr.includes('Oct') || entry.dateStr.includes('Yesterday');
-    if (activeFilter === 'last_30') return true;
+    if (activeFilter === 'sales') return entry.type === 'sale';
+    if (activeFilter === 'payments') return entry.type === 'payment';
     return true;
   });
 
+  const creditUsedPercent = Math.min(
+    100,
+    Math.round((party.outstandingBalance / party.creditLimit) * 100)
+  );
+
   return (
-    <div className="flex flex-col w-full max-w-lg mx-auto pb-32 px-3 sm:px-4">
-      {/* Party Identity Top Profile Bar */}
-      <div className="bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/30 mt-2">
-        <div className="flex items-start justify-between gap-2">
-          {/* Avatar and Name */}
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-heading font-extrabold text-[18px]">
-                AF
-              </div>
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-secondary rounded-full flex items-center justify-center text-white ring-2 ring-surface-container-lowest">
-                <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  check
-                </span>
-              </span>
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Customer Header Identity Card (Section 15: Mini Business Dashboard) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          {/* Identity Info */}
+          <div className="flex items-start gap-3.5 min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 text-white font-heading font-extrabold text-lg flex items-center justify-center flex-shrink-0 shadow-xs">
+              AF
             </div>
 
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="font-heading font-bold text-[18px] text-on-surface truncate">
+                <h1 className="font-heading font-bold text-xl text-slate-900 tracking-tight truncate">
                   {party.name}
-                </h2>
-                <span className="bg-secondary-container text-on-secondary-container text-[11px] font-bold px-2 py-0.5 rounded-full tracking-wide">
+                </h1>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 tracking-wide">
                   {party.category}
                 </span>
+                {party.isOverdue && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>{party.overdueDays} Days Overdue</span>
+                  </span>
+                )}
               </div>
-              <p className="text-[12px] text-on-surface-variant mt-0.5 truncate">
-                Prop: {party.proprietor} • {party.phone}
+              <p className="text-xs text-slate-500 mt-1 truncate">
+                Proprietor: <span className="font-medium text-slate-700">{party.proprietor}</span> • {party.phone}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                {party.address}
               </p>
             </div>
           </div>
 
-          {/* Quick Communication Icons */}
-          <div className="flex items-center gap-1.5 flex-shrink-0 relative">
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap flex-shrink-0">
             <a
               href={`tel:${party.phone}`}
-              className="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors"
-              title="Call Party"
+              className="h-9 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+              title="Call Customer"
             >
-              <span className="material-symbols-outlined text-[18px]">call</span>
+              <Phone className="w-3.5 h-3.5" />
+              <span>Call</span>
             </a>
+
             <button
               onClick={onSendWhatsAppReminder}
-              className="w-9 h-9 rounded-full bg-secondary-container/60 hover:bg-secondary-container text-secondary flex items-center justify-center transition-colors"
-              title="WhatsApp Message"
-              type="button"
+              className="h-9 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+              title="Send WhatsApp Payment Reminder"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                chat
-              </span>
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+              <span>WhatsApp Reminder</span>
             </button>
+
             <button
-              onClick={() => setShowOptionsDropdown(!showOptionsDropdown)}
-              className="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors"
-              title="Party Options"
-              type="button"
+              onClick={onViewStatementPdf}
+              className="h-9 px-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition-colors"
+              title="Download Statement"
             >
-              <span className="material-symbols-outlined text-[18px]">more_vert</span>
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>Statement</span>
             </button>
-
-            {showOptionsDropdown && (
-              <div className="absolute right-0 top-11 w-48 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/40 p-1.5 z-30">
-                <button
-                  className="w-full text-left px-3 py-2 text-[12px] rounded-lg hover:bg-surface-container flex items-center gap-2"
-                  onClick={() => {
-                    setShowOptionsDropdown(false);
-                    onViewStatementPdf();
-                  }}
-                >
-                  <span className="material-symbols-outlined text-[16px] text-primary">description</span>
-                  Download Statement
-                </button>
-                <button
-                  className="w-full text-left px-3 py-2 text-[12px] rounded-lg hover:bg-surface-container flex items-center gap-2 text-error"
-                  onClick={() => {
-                    setShowOptionsDropdown(false);
-                    alert(`Credit limit for ${party.name} is ₹${party.creditLimit.toLocaleString('en-IN')}`);
-                  }}
-                >
-                  <span className="material-symbols-outlined text-[16px]">tune</span>
-                  Adjust Credit Limit
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Address */}
-        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-outline-variant/20 text-[12px] text-on-surface-variant">
-          <span className="material-symbols-outlined text-[16px] text-outline flex-shrink-0">storefront</span>
-          <span className="truncate">{party.address}</span>
-        </div>
-
-        {/* Net Outstanding Balance Card */}
-        <div className="mt-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block">
-                NET OUTSTANDING BALANCE
-              </span>
-              <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="font-heading font-extrabold text-[26px] text-error">
-                  ₹{party.outstandingBalance.toLocaleString('en-IN')}
-                </span>
-                <span className="text-[12px] font-semibold text-error/90">
-                  (You will get)
-                </span>
-              </div>
+        {/* 4 Financial Key Metric Cards (Section 15) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+          {/* Outstanding Balance */}
+          <div className="p-3.5 rounded-lg bg-rose-50/70 border border-rose-100 flex flex-col justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
+              Outstanding Balance
+            </span>
+            <div className="font-heading font-extrabold text-2xl text-rose-700 my-1 tabular-nums">
+              ₹{party.outstandingBalance.toLocaleString('en-IN')}
             </div>
-
-            {party.isOverdue && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container text-on-error-container text-[11px] font-bold">
-                <span className="material-symbols-outlined text-[14px]">schedule</span>
-                {party.overdueDays} Days Overdue
-              </span>
-            )}
+            <span className="text-[10px] text-rose-600 font-medium">
+              Payment due from Imran Bhai
+            </span>
           </div>
 
-          {/* Credit Limit Gauge */}
-          <div className="mt-3 pt-2 border-t border-outline-variant/20">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-on-surface-variant font-medium">
-                Credit Limit: <strong className="text-on-surface">₹{party.creditLimit.toLocaleString('en-IN')}</strong>
-              </span>
-              <span className="text-error font-semibold">
-                56% used (₹10,800 left)
-              </span>
+          {/* Credit Limit Usage */}
+          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Credit Limit Used
+            </span>
+            <div className="font-heading font-bold text-xl text-slate-900 my-1 tabular-nums">
+              {creditUsedPercent}%
             </div>
-            <div className="w-full bg-surface-container-high h-2 rounded-full mt-1.5 overflow-hidden">
-              <div className="bg-primary h-full rounded-full" style={{ width: '56%' }}></div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3 Metric Cards Grid */}
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          <div className="bg-surface-container-low p-2.5 rounded-xl text-center">
-            <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Total Purchases</span>
-            <span className="font-heading font-bold text-[14px] text-primary block mt-0.5">
-              ₹{party.totalPurchases.toLocaleString('en-IN')}
-            </span>
-            <span className="text-[10px] text-on-surface-variant">8 Invoices</span>
-          </div>
-
-          <div className="bg-surface-container-low p-2.5 rounded-xl text-center">
-            <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Total Paid</span>
-            <span className="font-heading font-bold text-[14px] text-secondary block mt-0.5">
-              ₹{party.totalPaid.toLocaleString('en-IN')}
-            </span>
-            <span className="text-[10px] text-secondary font-semibold">Good Payer</span>
-          </div>
-
-          <div className="bg-surface-container-low p-2.5 rounded-xl text-center">
-            <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Avg. Pay Time</span>
-            <span className="font-heading font-bold text-[14px] text-on-surface block mt-0.5">
-              {party.avgPayTimeDays} Days
-            </span>
-            <span className="text-[10px] text-on-surface-variant">Standard: 15d</span>
-          </div>
-        </div>
-
-        {/* Quick Action Ribbon: WhatsApp Reminder & Statement PDF */}
-        <div className="grid grid-cols-2 gap-2 mt-3 pt-1">
-          <button
-            onClick={onSendWhatsAppReminder}
-            type="button"
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-full bg-secondary-container/70 hover:bg-secondary-container text-on-secondary-container font-heading font-bold text-[12px] transition-all active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              send
-            </span>
-            <span>WhatsApp Reminder</span>
-          </button>
-
-          <button
-            onClick={onViewStatementPdf}
-            type="button"
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-full bg-surface-container hover:bg-surface-container-high text-primary font-heading font-bold text-[12px] transition-all active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
-            <span>Statement PDF</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Ledger Passbook Header & Filter Strip */}
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[20px] text-primary">menu_book</span>
-            <h3 className="font-heading font-bold text-[16px] text-on-surface">Ledger Passbook</h3>
-          </div>
-          <span className="text-[11px] text-on-surface-variant font-medium">
-            Showing {filteredEntries.length} Entries
-          </span>
-        </div>
-
-        {/* Segmented Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-          <button
-            onClick={() => setActiveFilter('all')}
-            className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap ${
-              activeFilter === 'all'
-                ? 'bg-primary text-on-primary shadow-sm'
-                : 'bg-surface-container-lowest text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
-            }`}
-          >
-            All Time
-          </button>
-          <button
-            onClick={() => setActiveFilter('this_month')}
-            className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap ${
-              activeFilter === 'this_month'
-                ? 'bg-primary text-on-primary shadow-sm'
-                : 'bg-surface-container-lowest text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
-            }`}
-          >
-            This Month
-          </button>
-          <button
-            onClick={() => setActiveFilter('last_30')}
-            className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap ${
-              activeFilter === 'last_30'
-                ? 'bg-primary text-on-primary shadow-sm'
-                : 'bg-surface-container-lowest text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
-            }`}
-          >
-            Last 30 Days
-          </button>
-          <button
-            onClick={() => setActiveFilter('custom')}
-            className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1 ${
-              activeFilter === 'custom'
-                ? 'bg-primary text-on-primary shadow-sm'
-                : 'bg-surface-container-lowest text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-            Custom
-          </button>
-        </div>
-      </div>
-
-      {/* Ledger Feed Entries */}
-      <div className="flex flex-col gap-2.5 mt-2.5">
-        {filteredEntries.map((entry) => {
-          if (entry.type === 'opening') {
-            return (
+            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
               <div
-                key={entry.id}
-                className="bg-surface-container-lowest rounded-xl p-3 shadow-xs border border-outline-variant/30 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-outline">
-                    <span className="material-symbols-outlined text-[18px]">history</span>
-                  </div>
-                  <div>
-                    <span className="font-heading font-bold text-[13px] text-on-surface block">
-                      {entry.description}
-                    </span>
-                    <span className="text-[11px] text-on-surface-variant">{entry.dateStr}</span>
-                  </div>
-                </div>
-                <span className="font-heading font-bold text-[15px] text-on-surface">
-                  ₹{entry.amount.toLocaleString('en-IN')}
-                </span>
-              </div>
-            );
-          }
-
-          const isSale = entry.type === 'sale';
-
-          return (
-            <div
-              key={entry.id}
-              className="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm border border-outline-variant/30 flex flex-col gap-2 transition-all hover:border-outline-variant"
-            >
-              {/* Row 1: Header + Amount */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2.5 min-w-0">
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                      isSale ? 'bg-error-container/60 text-error' : 'bg-secondary-container/60 text-secondary'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      {isSale ? 'receipt_long' : 'payments'}
-                    </span>
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-heading font-bold text-[14px] text-on-surface">
-                        {entry.description}
-                      </span>
-                      {entry.tag && (
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                            isSale
-                              ? 'bg-error-container text-on-error-container'
-                              : 'bg-secondary-container text-on-secondary-container'
-                          }`}
-                        >
-                          {entry.tag}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] text-on-surface-variant block mt-0.5">
-                      {entry.dateStr} • {entry.timeStr}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right flex-shrink-0">
-                  <span
-                    className={`font-heading font-extrabold text-[16px] block ${
-                      isSale ? 'text-error' : 'text-secondary'
-                    }`}
-                  >
-                    {isSale ? `+₹${entry.amount.toLocaleString('en-IN')}` : `-₹${Math.abs(entry.amount).toLocaleString('en-IN')}`}
-                  </span>
-                  <span className="text-[10px] text-on-surface-variant block">
-                    {isSale ? 'Gave (Debit)' : 'Got (Credit)'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Item Summary or Reference Box */}
-              {isSale && entry.itemsSummary && (
-                <div className="flex items-center justify-between bg-surface-container-low px-2.5 py-1.5 rounded-lg text-[11px] text-on-surface-variant">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="material-symbols-outlined text-[15px] text-outline flex-shrink-0">inventory_2</span>
-                    <span className="truncate">{entry.itemsSummary}</span>
-                  </div>
-                  {entry.itemsCount && (
-                    <span className="bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-on-surface flex-shrink-0 ml-1">
-                      {entry.itemsCount}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {!isSale && (
-                <div className="flex items-center justify-between bg-surface-container-low px-2.5 py-1.5 rounded-lg text-[11px] text-on-surface-variant">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="material-symbols-outlined text-[15px] text-secondary flex-shrink-0">
-                      verified
-                    </span>
-                    <span className="truncate">
-                      {entry.upiRef ? `UPI Ref: ${entry.upiRef}` : (entry.note || 'Fully Settled Old Due')}
-                    </span>
-                  </div>
-                  {entry.receiptNumber && (
-                    <span className="bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-on-surface flex-shrink-0 ml-1">
-                      Rcpt #{entry.receiptNumber}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Balance & Action Link */}
-              <div className="flex items-center justify-between pt-1 border-t border-outline-variant/20 text-[12px]">
-                <div className="text-on-surface-variant">
-                  Balance: <strong className="text-on-surface font-heading">₹{entry.balance.toLocaleString('en-IN')}</strong>
-                </div>
-
-                {isSale ? (
-                  <button
-                    onClick={() => onViewBill(entry.billNumber || 'INV-1022')}
-                    className="flex items-center gap-1 text-primary font-semibold hover:underline"
-                    type="button"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">visibility</span>
-                    <span>View Bill</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => onShareReceipt(entry)}
-                    className="flex items-center gap-1 text-secondary font-semibold hover:underline"
-                    type="button"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">share</span>
-                    <span>Share Receipt</span>
-                  </button>
-                )}
-              </div>
+                style={{ width: `${creditUsedPercent}%` }}
+                className={`h-full ${creditUsedPercent > 80 ? 'bg-rose-500' : 'bg-blue-600'}`}
+              />
             </div>
-          );
-        })}
-      </div>
+            <span className="text-[10px] text-slate-500 mt-1">
+              ₹{party.outstandingBalance.toLocaleString('en-IN')} of ₹{party.creditLimit.toLocaleString('en-IN')}
+            </span>
+          </div>
 
-      {/* Floating Bottom Action Bar for Khata (You Gave / You Got) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-outline-variant/30 py-2.5 px-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
-          {/* You Gave (Red) */}
-          <button
-            onClick={onGiveCredit}
-            type="button"
-            className="flex-1 py-3 px-4 rounded-full bg-error-container text-on-error-container font-heading font-extrabold text-[14px] flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all hover:bg-error-container/80"
-          >
-            <span className="material-symbols-outlined text-[20px]">remove_circle</span>
-            <span>You Gave ₹</span>
-          </button>
+          {/* Total Lifetime Sales */}
+          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Total Purchases
+            </span>
+            <div className="font-heading font-bold text-xl text-slate-900 my-1 tabular-nums">
+              ₹{party.totalPurchases.toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-slate-500">
+              14 lifetime vouchers
+            </span>
+          </div>
 
-          {/* You Got (Green) */}
+          {/* Total Paid Back */}
+          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Total Paid
+            </span>
+            <div className="font-heading font-bold text-xl text-emerald-700 my-1 tabular-nums">
+              ₹{party.totalPaid.toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-emerald-700 font-medium">
+              Avg cycle: {party.avgPayTimeDays} days
+            </span>
+          </div>
+        </div>
+
+        {/* Primary Khata Action Buttons */}
+        <div className="flex items-center gap-3 pt-2">
           <button
             onClick={onRecordPayment}
-            type="button"
-            className="flex-1 py-3 px-4 rounded-full bg-secondary text-on-secondary font-heading font-extrabold text-[14px] flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all hover:bg-secondary/90"
+            className="flex-1 h-10 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">add_circle</span>
-            <span>You Got ₹</span>
+            <ArrowDownLeft className="w-4 h-4" />
+            <span>+ Receive Payment (You Got)</span>
           </button>
 
-          {/* Reminder Bell */}
           <button
-            onClick={onSendWhatsAppReminder}
-            type="button"
-            className="w-12 h-12 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center flex-shrink-0 transition-colors"
-            title="Set Reminder"
+            onClick={onGiveCredit}
+            className="flex-1 h-10 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors"
           >
-            <span className="material-symbols-outlined text-[22px]">notifications</span>
+            <ArrowUpRight className="w-4 h-4" />
+            <span>+ Give Credit Sale (You Gave)</span>
           </button>
+        </div>
+      </div>
+
+      {/* Transaction Timeline & Ledger Table (Section 12: Light rows, comfortable height, right-aligned) */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        {/* Filter bar */}
+        <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="font-heading font-bold text-slate-900 text-sm">
+              Passbook Ledger
+            </span>
+            <span className="text-slate-400">•</span>
+            <span className="text-slate-500">{entries.length} entries</span>
+          </div>
+
+          <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200 font-medium">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`px-3 py-1 rounded-md transition-all ${
+                activeFilter === 'all'
+                  ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              All Transactions
+            </button>
+            <button
+              onClick={() => setActiveFilter('sales')}
+              className={`px-3 py-1 rounded-md transition-all ${
+                activeFilter === 'sales'
+                  ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Sales (Udhaar)
+            </button>
+            <button
+              onClick={() => setActiveFilter('payments')}
+              className={`px-3 py-1 rounded-md transition-all ${
+                activeFilter === 'payments'
+                  ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Payments Received
+            </button>
+          </div>
+        </div>
+
+        {/* Clean Ledger Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-4">Date &amp; Time</th>
+                <th className="py-2.5 px-4">Voucher / Bill</th>
+                <th className="py-2.5 px-4">Description</th>
+                <th className="py-2.5 px-4 text-center">Status</th>
+                <th className="py-2.5 px-4 text-right">You Gave (Debit)</th>
+                <th className="py-2.5 px-4 text-right">You Got (Credit)</th>
+                <th className="py-2.5 px-4 text-right">Net Balance</th>
+                <th className="py-2.5 px-3 text-center w-8"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredEntries.map((entry) => {
+                const isSale = entry.type === 'sale';
+                const isPayment = entry.type === 'payment';
+                const isOpening = entry.type === 'opening';
+
+                return (
+                  <tr
+                    key={entry.id}
+                    onClick={() => {
+                      if (entry.billNumber) onViewBill(entry.billNumber);
+                    }}
+                    className={`hover:bg-slate-50/80 transition-colors ${
+                      entry.billNumber ? 'cursor-pointer' : ''
+                    }`}
+                  >
+                    {/* Date */}
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="font-semibold text-slate-900 block">
+                        {entry.dateStr}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {entry.timeStr || 'Opening'}
+                      </span>
+                    </td>
+
+                    {/* Voucher / Bill */}
+                    <td className="py-3 px-4 font-mono font-medium">
+                      {entry.billNumber ? (
+                        <span className="text-blue-600 font-semibold hover:underline">
+                          #{entry.billNumber}
+                        </span>
+                      ) : entry.receiptNumber ? (
+                        <span className="text-emerald-700">#{entry.receiptNumber}</span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+
+                    {/* Description */}
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-slate-800 block truncate max-w-[200px]">
+                        {entry.description}
+                      </span>
+                      {entry.itemsSummary && (
+                        <span className="text-[11px] text-slate-400 block truncate max-w-[200px]">
+                          {entry.itemsSummary}
+                        </span>
+                      )}
+                      {entry.upiRef && (
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          UPI Ref: {entry.upiRef}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Status Pill (Section 12 & 17) */}
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          isPayment
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : entry.status === 'OVERDUE'
+                            ? 'bg-rose-50 text-rose-800 border-rose-200'
+                            : entry.status === 'PARTIAL'
+                            ? 'bg-amber-50 text-amber-800 border-amber-200'
+                            : 'bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {isPayment
+                          ? 'PAID'
+                          : entry.status || (isSale ? 'UDHAAR' : 'BALANCE')}
+                      </span>
+                    </td>
+
+                    {/* You Gave (Debit - Red) */}
+                    <td className="py-3 px-4 text-right font-mono font-bold whitespace-nowrap">
+                      {isSale ? (
+                        <span className="text-rose-600">
+                          ₹{entry.amount.toLocaleString('en-IN')}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+
+                    {/* You Got (Credit - Green) */}
+                    <td className="py-3 px-4 text-right font-mono font-bold whitespace-nowrap">
+                      {isPayment ? (
+                        <span className="text-emerald-600">
+                          ₹{Math.abs(entry.amount).toLocaleString('en-IN')}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+
+                    {/* Balance */}
+                    <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                      ₹{entry.balance.toLocaleString('en-IN')}
+                    </td>
+
+                    {/* Quick Action Icon */}
+                    <td className="py-3 px-3 text-center text-slate-400">
+                      {entry.billNumber && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewBill(entry.billNumber!);
+                          }}
+                          className="p-1 hover:text-blue-600 rounded transition-colors"
+                          title="View Invoice Drawer"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      )}
+                      {entry.type === 'payment' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onShareReceipt(entry);
+                          }}
+                          className="p-1 hover:text-emerald-600 rounded transition-colors"
+                          title="View Payment Voucher"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

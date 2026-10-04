@@ -1,4 +1,4 @@
-import { Party, LedgerEntry, ExpenseEntry, PaymentSubmission } from '../types';
+import { Party, LedgerEntry, ExpenseEntry, PaymentSubmission, ProductItem } from '../types';
 
 export const ASSETS = {
   vyapaarLogo: 'https://lh3.googleusercontent.com/aida/AEtjO1XDVtYGiwd9-d9wC4HMz7WcrvEeRztFw0vJ_1LnGOt1H_F4Au4ENr6bP4cqqjhy-1z_4YRpUmt9uAp0Oq4YXfAWFTpGHLrnMrDo3yPHXyr13l893LDD5dBncJRMkthL2sZAPs3mt0_hVdppIXHdyiguPk2mmtTluUpabkjM3hjEnnz9q0kpMxvcHgdoFa_AUiJvc5vD3qOetEGFscuaCbKIPLutekXFHKGkzo0k6g4BYqs2wSU306Tm',
@@ -22,6 +22,76 @@ export const INITIAL_PARTY: Party = {
   avgPayTimeDays: 12,
 };
 
+export const MOCK_CUSTOMERS: Party[] = [
+  INITIAL_PARTY,
+  {
+    id: 'party-gupta-02',
+    name: 'Gupta Provision Store',
+    proprietor: 'Rajesh Gupta',
+    phone: '+91 98930 11223',
+    category: 'RETAIL',
+    address: 'Plot 45, Scheme 54, Vijay Nagar, Indore',
+    outstandingBalance: 8400,
+    isOverdue: false,
+    overdueDays: 0,
+    creditLimit: 15000,
+    totalPurchases: 142000,
+    totalPaid: 133600,
+    avgPayTimeDays: 7,
+  },
+  {
+    id: 'party-verma-03',
+    name: 'Verma Supermarket',
+    proprietor: 'Sanjay Verma',
+    phone: '+91 94250 88991',
+    category: 'SUPERMARKET',
+    address: 'Main Market, Palasia Square, Indore',
+    outstandingBalance: 24500,
+    isOverdue: true,
+    overdueDays: 9,
+    creditLimit: 50000,
+    totalPurchases: 320000,
+    totalPaid: 295500,
+    avgPayTimeDays: 15,
+  },
+  {
+    id: 'party-agarwal-04',
+    name: 'Agarwal Sweets & Namkeen',
+    proprietor: 'Mukesh Agarwal',
+    phone: '+91 97550 33445',
+    category: 'WHOLESALE',
+    address: 'Sarafa Bazaar, Cloth Market, Indore',
+    outstandingBalance: 0,
+    isOverdue: false,
+    overdueDays: 0,
+    creditLimit: 30000,
+    totalPurchases: 215000,
+    totalPaid: 215000,
+    avgPayTimeDays: 5,
+  },
+  {
+    id: 'party-royal-05',
+    name: 'Royal Bakery & Foods',
+    proprietor: 'Farhan Khan',
+    phone: '+91 91110 55667',
+    category: 'DISTRIBUTOR',
+    address: 'Industrial Area, Sanwer Road, Indore',
+    outstandingBalance: 18900,
+    isOverdue: false,
+    overdueDays: 0,
+    creditLimit: 40000,
+    totalPurchases: 185000,
+    totalPaid: 166100,
+    avgPayTimeDays: 10,
+  },
+];
+
+export const MOCK_SUPPLIERS = [
+  { id: 'sup-1', name: 'Rajesh Mandi Dry Fruits Co.', contact: 'Rajesh Kumar', phone: '+91 98270 12345', balanceDue: 45000, category: 'Dry Fruits' },
+  { id: 'sup-2', name: 'Laxmi Packaging Hub', contact: 'Kailash Soni', phone: '+91 94060 67890', balanceDue: 8500, category: 'Packaging' },
+  { id: 'sup-3', name: 'Kashmir Saffron & Walnuts Direct', contact: 'Bashir Ahmed', phone: '+91 99060 54321', balanceDue: 61000, category: 'Imports' },
+];
+
 export const INITIAL_LEDGER_ENTRIES: LedgerEntry[] = [
   {
     id: 'entry-1',
@@ -35,6 +105,7 @@ export const INITIAL_LEDGER_ENTRIES: LedgerEntry[] = [
     itemsSummary: 'Almonds (10kg), Cashews (5kg), Raisin...',
     itemsCount: '4 items',
     balance: 14200,
+    status: 'OVERDUE',
   },
   {
     id: 'entry-2',
@@ -47,6 +118,7 @@ export const INITIAL_LEDGER_ENTRIES: LedgerEntry[] = [
     upiRef: 'PhonePe / 9482910',
     receiptNumber: 'REC-304',
     balance: 5800,
+    status: 'PAID',
   },
   {
     id: 'entry-3',
@@ -60,6 +132,7 @@ export const INITIAL_LEDGER_ENTRIES: LedgerEntry[] = [
     itemsSummary: 'Diwali Wholesale Dry Fruits Gift Boxes',
     itemsCount: '6 Cartons',
     balance: 15800,
+    status: 'PARTIAL',
   },
   {
     id: 'entry-4',
@@ -72,6 +145,7 @@ export const INITIAL_LEDGER_ENTRIES: LedgerEntry[] = [
     note: 'Shop Counter Cash Handover',
     receiptNumber: 'REC-288',
     balance: 0,
+    status: 'PAID',
   },
   {
     id: 'entry-5',
@@ -81,6 +155,7 @@ export const INITIAL_LEDGER_ENTRIES: LedgerEntry[] = [
     timeStr: '',
     description: 'Opening Balance Brought Forward',
     balance: 8000,
+    status: 'PAID',
   },
 ];
 
@@ -155,17 +230,156 @@ export const DEFAULT_PAYMENT_SUBMISSION: PaymentSubmission = {
   addReviewLink: true,
 };
 
+export const MOCK_PRODUCTS: ProductItem[] = [
+  {
+    id: 'prod-1',
+    name: 'California Almonds Premium (Badam)',
+    sku: 'ALM-CAL-500',
+    barcode: '890123456701',
+    category: 'Dry Fruits',
+    unit: 'kg',
+    purchasePrice: 360,
+    sellingPrice: 420,
+    currentStock: 248,
+    minStock: 50,
+    openingStock: 220,
+    purchasesQty: 80,
+    salesQty: 52,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-2',
+    name: 'Whole Cashews W-320 (Kaju)',
+    sku: 'CSH-W320-1K',
+    barcode: '890123456702',
+    category: 'Dry Fruits',
+    unit: 'kg',
+    purchasePrice: 480,
+    sellingPrice: 560,
+    currentStock: 142,
+    minStock: 40,
+    openingStock: 160,
+    purchasesQty: 50,
+    salesQty: 68,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-3',
+    name: 'Afghan Green Raisins (Kishmish)',
+    sku: 'RSN-AFG-1K',
+    barcode: '890123456703',
+    category: 'Dry Fruits',
+    unit: 'kg',
+    purchasePrice: 280,
+    sellingPrice: 350,
+    currentStock: 32,
+    minStock: 45,
+    openingStock: 50,
+    purchasesQty: 20,
+    salesQty: 38,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-4',
+    name: 'Pista Akbari Roasted & Salted',
+    sku: 'PST-AKB-500',
+    barcode: '890123456704',
+    category: 'Dry Fruits',
+    unit: 'kg',
+    purchasePrice: 590,
+    sellingPrice: 700,
+    currentStock: 18,
+    minStock: 30,
+    openingStock: 35,
+    purchasesQty: 10,
+    salesQty: 27,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-5',
+    name: 'Green Cardamom 8mm (Elaichi Bold)',
+    sku: 'ELC-BLD-100',
+    barcode: '890123456705',
+    category: 'Spices',
+    unit: 'kg',
+    purchasePrice: 1950,
+    sellingPrice: 2400,
+    currentStock: 8,
+    minStock: 10,
+    openingStock: 12,
+    purchasesQty: 5,
+    salesQty: 9,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-6',
+    name: 'Kashmiri Walnut Kernels (Akhrot Giri)',
+    sku: 'WLN-KSH-500',
+    barcode: '890123456706',
+    category: 'Dry Fruits',
+    unit: 'kg',
+    purchasePrice: 620,
+    sellingPrice: 750,
+    currentStock: 95,
+    minStock: 25,
+    openingStock: 80,
+    purchasesQty: 40,
+    salesQty: 25,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-7',
+    name: 'Arabian Fard Dates (Khajoor Box)',
+    sku: 'DAT-ARD-500',
+    barcode: '890123456707',
+    category: 'Packaged',
+    unit: 'box',
+    purchasePrice: 140,
+    sellingPrice: 190,
+    currentStock: 180,
+    minStock: 40,
+    openingStock: 150,
+    purchasesQty: 80,
+    salesQty: 50,
+    adjustmentsQty: 0,
+  },
+  {
+    id: 'prod-8',
+    name: 'Premium Sharbati Wheat Flour (Atta)',
+    sku: 'ATT-SHR-10K',
+    barcode: '890123456708',
+    category: 'Grains',
+    unit: 'bag',
+    purchasePrice: 360,
+    sellingPrice: 420,
+    currentStock: 88,
+    minStock: 20,
+    openingStock: 70,
+    purchasesQty: 50,
+    salesQty: 32,
+    adjustmentsQty: 0,
+  },
+];
+
 export const INVOICE_DETAILS: Record<string, {
   billNo: string;
   date: string;
+  customerName?: string;
+  paymentMode?: string;
+  status?: 'PAID' | 'PENDING' | 'OVERDUE' | 'PARTIAL';
   items: Array<{ name: string; qty: string; rate: number; amount: number }>;
   subtotal: number;
+  discount: number;
+  roundOff: number;
   tax: number;
   grandTotal: number;
 }> = {
   'INV-1022': {
     billNo: 'INV-1022',
     date: '23 Oct 2024, 04:15 PM',
+    customerName: 'Asra Fruits & Nuts',
+    paymentMode: 'Udhaar (Due)',
+    status: 'OVERDUE',
     items: [
       { name: 'California Almonds Premium', qty: '10 kg', rate: 420, amount: 4200 },
       { name: 'Whole Cashews W-320', qty: '5 kg', rate: 560, amount: 2800 },
@@ -173,18 +387,100 @@ export const INVOICE_DETAILS: Record<string, {
       { name: 'Pista Akbari Roasted', qty: '1 kg', rate: 700, amount: 700 },
     ],
     subtotal: 8400,
+    discount: 0,
+    roundOff: 0,
     tax: 0,
     grandTotal: 8400,
   },
   'INV-1011': {
     billNo: 'INV-1011',
     date: '12 Oct 2024, 02:45 PM',
+    customerName: 'Asra Fruits & Nuts',
+    paymentMode: 'Udhaar (Partial Paid)',
+    status: 'PARTIAL',
     items: [
       { name: 'Diwali Wholesale Dry Fruits Gift Boxes', qty: '6 Cartons', rate: 2400, amount: 14400 },
       { name: 'Gold Embossed Packaging Boxes', qty: '14 pcs', rate: 100, amount: 1400 },
     ],
     subtotal: 15800,
+    discount: 0,
+    roundOff: 0,
     tax: 0,
     grandTotal: 15800,
   },
+  'INV-1025': {
+    billNo: 'INV-1025',
+    date: '24 Oct 2024, 11:20 AM',
+    customerName: 'Gupta Provision Store',
+    paymentMode: 'UPI / PhonePe',
+    status: 'PAID',
+    items: [
+      { name: 'California Almonds Premium', qty: '15 kg', rate: 420, amount: 6300 },
+      { name: 'Whole Cashews W-320', qty: '10 kg', rate: 560, amount: 5600 },
+      { name: 'Arabian Fard Dates Box', qty: '10 pcs', rate: 190, amount: 1900 },
+    ],
+    subtotal: 13800,
+    discount: 300,
+    roundOff: 0,
+    tax: 0,
+    grandTotal: 13500,
+  },
+  'INV-1026': {
+    billNo: 'INV-1026',
+    date: '24 Oct 2024, 01:45 PM',
+    customerName: 'Verma Supermarket',
+    paymentMode: 'Cash Counter',
+    status: 'PAID',
+    items: [
+      { name: 'Premium Sharbati Wheat Flour', qty: '20 bags', rate: 420, amount: 8400 },
+      { name: 'Green Cardamom 8mm', qty: '2 kg', rate: 2400, amount: 4800 },
+    ],
+    subtotal: 13200,
+    discount: 200,
+    roundOff: 0,
+    tax: 0,
+    grandTotal: 13000,
+  },
+};
+
+export const FINANCIAL_METRICS = {
+  sales: 1248500,
+  salesGrowth: 12.4,
+  purchases: 842200,
+  expenses: 124500,
+  netProfit: 281800,
+  netProfitMargin: 22.5,
+  outstanding: 432500,
+  receivables: 318000,
+  payables: 114500,
+  inventoryValue: 348900,
+};
+
+export const CHART_DATA_TIMEFRAMES = {
+  '7D': [
+    { label: '18 Oct', sales: 142000, purchases: 95000, profit: 34000 },
+    { label: '19 Oct', sales: 168000, purchases: 110000, profit: 41000 },
+    { label: '20 Oct', sales: 154000, purchases: 88000, profit: 48000 },
+    { label: '21 Oct', sales: 182000, purchases: 125000, profit: 42000 },
+    { label: '22 Oct', sales: 195000, purchases: 130000, profit: 49000 },
+    { label: '23 Oct', sales: 178000, purchases: 115000, profit: 44000 },
+    { label: '24 Oct', sales: 229500, purchases: 179200, profit: 23800 },
+  ],
+  '30D': [
+    { label: 'Week 1', sales: 285000, purchases: 195000, profit: 64000 },
+    { label: 'Week 2', sales: 312000, purchases: 215000, profit: 71000 },
+    { label: 'Week 3', sales: 298000, purchases: 198000, profit: 69000 },
+    { label: 'Week 4', sales: 353500, purchases: 234200, profit: 77800 },
+  ],
+  '3M': [
+    { label: 'August', sales: 1120000, purchases: 760000, profit: 252000 },
+    { label: 'September', sales: 1195000, purchases: 810000, profit: 268000 },
+    { label: 'October', sales: 1248500, purchases: 842200, profit: 281800 },
+  ],
+  '1Y': [
+    { label: 'Q1', sales: 2850000, purchases: 1920000, profit: 640000 },
+    { label: 'Q2', sales: 3120000, purchases: 2100000, profit: 710000 },
+    { label: 'Q3', sales: 3450000, purchases: 2320000, profit: 780000 },
+    { label: 'Q4', sales: 3820000, purchases: 2580000, profit: 860000 },
+  ],
 };

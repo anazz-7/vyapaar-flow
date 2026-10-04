@@ -1,5 +1,6 @@
 import React from 'react';
 import { INVOICE_DETAILS, ASSETS } from '../data/mockData';
+import { FileText, X, Printer, Share2, Download } from 'lucide-react';
 
 interface BillDetailModalProps {
   billNo: string | null;
@@ -17,6 +18,9 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
   const invoice = INVOICE_DETAILS[billNo] || {
     billNo,
     date: '23 Oct 2024, 04:15 PM',
+    customerName: partyName,
+    paymentMode: 'Udhaar (Due)',
+    status: 'OVERDUE',
     items: [
       { name: 'California Almonds Premium', qty: '10 kg', rate: 420, amount: 4200 },
       { name: 'Whole Cashews W-320', qty: '5 kg', rate: 560, amount: 2800 },
@@ -24,104 +28,140 @@ export const BillDetailModal: React.FC<BillDetailModalProps> = ({
       { name: 'Pista Akbari Roasted', qty: '1 kg', rate: 700, amount: 700 },
     ],
     subtotal: 8400,
+    discount: 0,
+    roundOff: 0,
     tax: 0,
     grandTotal: 8400,
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShare = () => {
+    const text = `Sale Bill #${invoice.billNo} from BM Super Mart:\nCustomer: ${partyName}\nTotal Amount: ₹${invoice.grandTotal.toLocaleString('en-IN')}\nDate: ${invoice.date}\nThank you!`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/60 backdrop-blur-xs">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-md w-full p-4 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto border border-outline-variant/30">
-        <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-          <div className="flex items-center gap-2">
-            <img
-              alt="BM Super Mart"
-              className="w-7 h-7 rounded-lg object-contain bg-surface-container-low"
-              src={ASSETS.storeLogo}
-            />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
+      <div
+        className="w-full max-w-lg bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm">
+              <FileText className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="font-heading font-bold text-[15px] text-on-surface">Tax Invoice #{invoice.billNo}</h3>
-              <p className="text-[11px] text-on-surface-variant">Party: {partyName}</p>
+              <h2 className="font-heading font-bold text-base text-slate-900">
+                Invoice #{invoice.billNo}
+              </h2>
+              <p className="text-xs text-slate-500">
+                Customer: {partyName} • {invoice.date}
+              </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="bg-surface-container-low p-3 rounded-xl border border-outline-variant/20 flex justify-between text-[11px]">
-          <div>
-            <span className="text-on-surface-variant block">Billing Date</span>
-            <span className="font-bold text-on-surface">{invoice.date}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-on-surface-variant block">Status</span>
-            <span className="bg-error-container text-on-error-container px-2 py-0.5 rounded font-bold">
-              Udhaar (Due)
+        {/* Content */}
+        <div className="p-5 space-y-4 text-xs overflow-y-auto">
+          {/* Metadata banner */}
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Billing Date &amp; Status
+              </span>
+              <span className="font-semibold text-slate-900 block mt-0.5">
+                {invoice.date}
+              </span>
+            </div>
+
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                invoice.status === 'PAID'
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-rose-50 text-rose-800 border-rose-200'
+              }`}
+            >
+              {invoice.status === 'PAID' ? 'PAID (CASH / ONLINE)' : 'UDHAAR (DUE)'}
             </span>
           </div>
-        </div>
 
-        {/* Itemized Table */}
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1 pb-1 border-b border-outline-variant/30">
-            <span>Item / Description</span>
-            <span className="text-right">Qty × Rate = Total</span>
-          </div>
+          {/* Items Table */}
+          <div className="space-y-2">
+            <span className="font-bold uppercase tracking-wider text-slate-500 text-[10px] block">
+              Itemized Products
+            </span>
 
-          <div className="flex flex-col gap-1.5 pt-1">
-            {invoice.items.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-2 rounded-lg bg-surface-container-low/50 text-[12px]"
-              >
-                <div className="min-w-0 pr-2">
-                  <span className="font-medium text-on-surface block truncate">{item.name}</span>
-                  <span className="text-[10px] text-on-surface-variant">
-                    {item.qty} @ ₹{item.rate}/unit
+            <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+              {invoice.items.map((item, idx) => (
+                <div key={idx} className="p-2.5 flex items-center justify-between bg-white">
+                  <div className="min-w-0 pr-2">
+                    <span className="font-semibold text-slate-900 block truncate">
+                      {item.name}
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      {item.qty} @ ₹{item.rate}/unit
+                    </span>
+                  </div>
+                  <span className="font-mono font-bold text-slate-900 whitespace-nowrap">
+                    ₹{item.amount.toLocaleString('en-IN')}
                   </span>
                 </div>
-                <span className="font-heading font-bold text-on-surface whitespace-nowrap">
-                  ₹{item.amount.toLocaleString('en-IN')}
-                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Total Breakdown */}
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs text-slate-600">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span className="font-mono text-slate-900 font-medium">
+                ₹{invoice.subtotal.toLocaleString('en-IN')}
+              </span>
+            </div>
+            {invoice.discount > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span>Discount</span>
+                <span className="font-mono">−₹{invoice.discount}</span>
               </div>
-            ))}
+            )}
+            <div className="pt-2 border-t border-slate-200 flex justify-between font-bold text-slate-900 text-sm">
+              <span>Grand Total</span>
+              <span className="font-heading font-extrabold text-base text-slate-900 tabular-nums">
+                ₹{invoice.grandTotal.toLocaleString('en-IN')}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Bill Total Summary */}
-        <div className="bg-surface-container p-3 rounded-xl flex flex-col gap-1 text-[12px] border border-outline-variant/20">
-          <div className="flex justify-between text-on-surface-variant">
-            <span>Subtotal</span>
-            <span>₹{invoice.subtotal.toLocaleString('en-IN')}</span>
-          </div>
-          <div className="flex justify-between text-on-surface-variant">
-            <span>CGST + SGST (0%)</span>
-            <span>₹0.00</span>
-          </div>
-          <div className="border-t border-outline-variant/40 pt-1.5 mt-0.5 flex justify-between font-heading font-extrabold text-[15px] text-on-surface">
-            <span>Grand Total</span>
-            <span className="text-primary">₹{invoice.grandTotal.toLocaleString('en-IN')}</span>
-          </div>
-        </div>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+            <button
+              onClick={handlePrint}
+              className="flex-1 py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Invoice</span>
+            </button>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-1 border-t border-outline-variant/20">
-          <button
-            onClick={() => window.print()}
-            className="flex-1 py-2 rounded-xl bg-surface-container text-on-surface font-medium text-[12px] flex items-center justify-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-[16px]">print</span>
-            <span>Print Invoice</span>
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 py-2 rounded-xl bg-primary text-on-primary font-heading font-bold text-[12px]"
-          >
-            Done
-          </button>
+            <button
+              onClick={handleShare}
+              className="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Share2 className="w-4 h-4 text-emerald-600" />
+              <span>WhatsApp</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

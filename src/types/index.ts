@@ -1,4 +1,14 @@
-export type ScreenMode = 'khata' | 'daybook' | 'dashboard' | 'receipt' | 'record-payment';
+export type ScreenMode =
+  | 'dashboard'
+  | 'sales'
+  | 'khata'
+  | 'daybook'
+  | 'products'
+  | 'reports'
+  | 'settings'
+  | 'receipt'
+  | 'record-payment';
+
 export type ActiveTab = 'home' | 'sales' | 'party' | 'items' | 'more';
 
 export interface LedgerEntry {
@@ -16,6 +26,7 @@ export interface LedgerEntry {
   receiptNumber?: string;
   note?: string;
   balance: number;
+  status?: 'PAID' | 'PENDING' | 'PARTIAL' | 'OVERDUE';
 }
 
 export interface ExpenseEntry {
@@ -48,6 +59,31 @@ export interface Party {
   avgPayTimeDays: number;
 }
 
+export interface ProductItem {
+  id: string;
+  name: string;
+  sku: string;
+  barcode: string;
+  category: string;
+  unit: string;
+  purchasePrice: number;
+  sellingPrice: number;
+  currentStock: number;
+  minStock: number;
+  openingStock: number;
+  purchasesQty: number;
+  salesQty: number;
+  adjustmentsQty: number;
+}
+
+export interface CartItem {
+  product: ProductItem;
+  qty: number;
+  rate: number;
+  discountPercent: number;
+  amount: number;
+}
+
 export interface PaymentSubmission {
   receiptId: string;
   partyName: string;
@@ -64,3 +100,13 @@ export interface PaymentSubmission {
   includePdfSlip: boolean;
   addReviewLink: boolean;
 }
+
+export interface ToastNotification {
+  id: string;
+  title: string;
+  message?: string;
+  type: 'success' | 'info' | 'warning' | 'error';
+  undoAction?: () => void;
+  undoLabel?: string;
+}
+

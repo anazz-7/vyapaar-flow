@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Coins, X, Check, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface CountCashModalProps {
   isOpen: boolean;
@@ -13,11 +14,11 @@ export const CountCashModal: React.FC<CountCashModalProps> = ({
 }) => {
   const [denominations, setDenominations] = useState<Record<number, number>>({
     500: 160, // 80,000
-    200: 20,  // 4,000
-    100: 10,  // 1,000
-    50: 6,    // 300
-    20: 3,    // 60
-    10: 4,    // 40
+    200: 20, // 4,000
+    100: 10, // 1,000
+    50: 6, // 300
+    20: 3, // 60
+    10: 4, // 40
   });
 
   if (!isOpen) return null;
@@ -36,121 +37,162 @@ export const CountCashModal: React.FC<CountCashModalProps> = ({
     }));
   };
 
+  const handleReset = () => {
+    setDenominations({
+      500: 0,
+      200: 0,
+      100: 0,
+      50: 0,
+      20: 0,
+      10: 0,
+    });
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/60 backdrop-blur-xs">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-md w-full p-4 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto border border-outline-variant/30">
-        <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
+      <div
+        className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+              <Coins className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-[15px] text-on-surface">Cash Drawer Reconciliation</h3>
-              <p className="text-[11px] text-on-surface-variant">Verify physical notes against Day Book</p>
+              <h2 className="font-heading font-bold text-base text-slate-900">
+                Cash Note Counter &amp; Reconciliation
+              </h2>
+              <p className="text-xs text-slate-500">
+                Verify physical drawer notes vs Day Book
+              </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Expected vs Counted Comparison */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/20">
-            <span className="text-[10px] text-on-surface-variant uppercase font-bold">System Expected</span>
-            <span className="font-heading font-black text-[18px] text-primary block mt-0.5">
-              ₹{expectedAmount.toLocaleString('en-IN')}
+        {/* Content */}
+        <div className="p-5 space-y-4 text-xs overflow-y-auto">
+          {/* Comparison Banner */}
+          <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                System Day Book
+              </span>
+              <span className="font-heading font-bold text-lg text-slate-800 block tabular-nums">
+                ₹{expectedAmount.toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Physical Notes Counted
+              </span>
+              <span className="font-heading font-extrabold text-lg text-blue-600 block tabular-nums">
+                ₹{totalCalculated.toLocaleString('en-IN')}
+              </span>
+            </div>
+          </div>
+
+          {/* Difference Indicator */}
+          <div
+            className={`p-3 rounded-xl border flex items-center justify-between font-semibold ${
+              difference === 0
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : difference > 0
+                ? 'bg-blue-50 text-blue-800 border-blue-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {difference === 0 ? (
+                <Check className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600" />
+              )}
+              <span>
+                {difference === 0
+                  ? 'Drawer Cash Reconciled (100% Match)'
+                  : difference > 0
+                  ? `Excess Cash: +₹${difference.toLocaleString('en-IN')}`
+                  : `Shortage in Drawer: −₹${Math.abs(difference).toLocaleString('en-IN')}`}
+              </span>
+            </div>
+            <span className="font-mono text-sm tabular-nums">
+              {difference >= 0 ? `+₹${difference}` : `−₹${Math.abs(difference)}`}
             </span>
           </div>
 
-          <div className="bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/20">
-            <span className="text-[10px] text-on-surface-variant uppercase font-bold">Physical Count</span>
-            <span
-              className={`font-heading font-black text-[18px] block mt-0.5 ${
-                difference === 0 ? 'text-secondary' : 'text-error'
-              }`}
+          {/* Denominations Table */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold px-1">
+              <span>Denomination</span>
+              <span>Pieces (Qty)</span>
+              <span>Total Value (₹)</span>
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+              {[500, 200, 100, 50, 20, 10].map((note) => {
+                const count = denominations[note] || 0;
+                const value = note * count;
+                return (
+                  <div key={note} className="p-2.5 flex items-center justify-between bg-white text-xs">
+                    <span className="font-mono font-bold text-slate-900 w-16">
+                      ₹{note}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400 font-mono">×</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={count || ''}
+                        onChange={(e) =>
+                          handleCountChange(note, parseInt(e.target.value, 10) || 0)
+                        }
+                        placeholder="0"
+                        className="w-16 h-7 text-center font-mono font-bold bg-slate-50 border border-slate-200 rounded text-xs outline-hidden focus:bg-white focus:border-blue-500"
+                      />
+                    </div>
+
+                    <span className="font-mono font-bold text-slate-900 w-20 text-right">
+                      ₹{value.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="text-slate-500 hover:text-slate-800 text-xs font-semibold flex items-center gap-1"
             >
-              ₹{totalCalculated.toLocaleString('en-IN')}
-            </span>
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Reset Notes</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                alert(`Closing drawer verified with ₹${totalCalculated.toLocaleString('en-IN')}`);
+                onClose();
+              }}
+              className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs transition-colors"
+            >
+              Accept &amp; Close Register
+            </button>
           </div>
-        </div>
-
-        {/* Status Notification */}
-        <div
-          className={`p-2.5 rounded-xl text-[12px] flex items-center gap-2 font-medium ${
-            difference === 0
-              ? 'bg-secondary-container/60 text-on-secondary-container'
-              : 'bg-error-container/60 text-on-error-container'
-          }`}
-        >
-          <span className="material-symbols-outlined text-[18px]">
-            {difference === 0 ? 'check_circle' : 'warning'}
-          </span>
-          <span>
-            {difference === 0
-              ? 'Exact Match! Cash drawer is 100% balanced.'
-              : difference > 0
-              ? `Surplus of +₹${difference.toLocaleString('en-IN')}`
-              : `Shortage of -₹${Math.abs(difference).toLocaleString('en-IN')}`}
-          </span>
-        </div>
-
-        {/* Denominations Grid */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
-            Currency Notes &amp; Coins
-          </span>
-          <div className="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-1">
-            {[500, 200, 100, 50, 20, 10].map((denom) => {
-              const count = denominations[denom] || 0;
-              const subtotal = denom * count;
-              return (
-                <div
-                  key={denom}
-                  className="flex items-center justify-between p-2 rounded-xl bg-surface-container-low border border-outline-variant/20 text-[12px]"
-                >
-                  <div className="flex items-center gap-2 w-20">
-                    <span className="font-heading font-bold text-[13px] text-primary">₹{denom}</span>
-                    <span className="text-on-surface-variant font-mono">×</span>
-                  </div>
-
-                  <input
-                    type="number"
-                    min="0"
-                    value={count}
-                    onChange={(e) => handleCountChange(denom, parseInt(e.target.value, 10) || 0)}
-                    className="w-24 bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-2 py-1 text-center font-heading font-bold focus:outline-none focus:border-primary"
-                  />
-
-                  <div className="w-24 text-right font-heading font-bold text-on-surface">
-                    ₹{subtotal.toLocaleString('en-IN')}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-surface-container text-on-surface font-medium text-[12px]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              alert('Cash tally verified and logged to audit trail.');
-              onClose();
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-secondary text-on-secondary font-heading font-bold text-[13px] shadow-sm"
-          >
-            Confirm Reconciliation
-          </button>
         </div>
       </div>
     </div>

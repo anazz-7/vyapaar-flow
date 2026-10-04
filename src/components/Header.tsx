@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
-import { ASSETS } from '../data/mockData';
 import { ScreenMode } from '../types';
+import {
+  Search,
+  Plus,
+  Bell,
+  HelpCircle,
+  ChevronDown,
+  Building2,
+  Smartphone,
+  Monitor,
+  Receipt,
+  ShoppingCart,
+  CreditCard,
+  UserPlus,
+  PackagePlus,
+  Truck,
+  Check,
+  ArrowLeft,
+} from 'lucide-react';
+import { ASSETS } from '../data/mockData';
 
 interface HeaderProps {
   title?: string;
@@ -9,6 +27,12 @@ interface HeaderProps {
   onBack?: () => void;
   screenMode: ScreenMode;
   onScreenChange: (mode: ScreenMode) => void;
+  onOpenSearch: () => void;
+  onOpenQuickSale: () => void;
+  onOpenRecordPayment: () => void;
+  onOpenAddExpense: () => void;
+  isMobileFrame: boolean;
+  onToggleMobileFrame: (val: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,209 +40,295 @@ export const Header: React.FC<HeaderProps> = ({
   subtitle,
   showBack = false,
   onBack,
+  screenMode,
   onScreenChange,
+  onOpenSearch,
+  onOpenQuickSale,
+  onOpenRecordPayment,
+  onOpenAddExpense,
+  isMobileFrame,
+  onToggleMobileFrame,
 }) => {
-  const [showShopDropdown, setShowShopDropdown] = useState(false);
+  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+  const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   const [showNotificationPopup, setShowNotificationPopup] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
 
+  const getBreadcrumbTitle = () => {
+    if (title) return title;
+    switch (screenMode) {
+      case 'dashboard':
+        return 'Business Overview';
+      case 'sales':
+        return 'Sales & Invoices (POS)';
+      case 'khata':
+        return 'Customer Khata (Passbook)';
+      case 'daybook':
+        return 'Cash Day Book (Roker)';
+      case 'products':
+        return 'Products & Inventory';
+      case 'reports':
+        return 'Financial Reports & P&L';
+      case 'settings':
+        return 'Settings';
+      case 'receipt':
+        return 'Payment Receipt Slip';
+      case 'record-payment':
+        return 'Receive Payment';
+      default:
+        return 'Dashboard';
+    }
+  };
+
   return (
-    <header className="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-outline-variant/30">
-      <div className="h-16 px-4 max-w-4xl mx-auto flex items-center justify-between gap-2">
-        {/* Left Slot */}
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          {showBack ? (
-            <button
-              aria-label="Go back"
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors -ml-2"
-              onClick={onBack}
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-            </button>
-          ) : null}
+    <header className="h-16 w-full bg-white border-b border-slate-200 px-4 flex items-center justify-between gap-3 sticky top-0 z-40 select-none">
+      {/* Left: Mobile Back Button / Title & Breadcrumbs */}
+      <div className="flex items-center gap-3 min-w-0">
+        {showBack && (
+          <button
+            onClick={onBack}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Go back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
 
-          {/* Vyapaar Brand Logo */}
-          <img
-            alt="VyapaarEasy Brand Logo"
-            className="h-8 w-auto object-contain flex-shrink-0 cursor-pointer"
-            src={ASSETS.vyapaarLogo}
-            onClick={() => onScreenChange('dashboard')}
-          />
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="hover:text-slate-800 cursor-pointer" onClick={() => onScreenChange('dashboard')}>
+                BM Super Mart
+              </span>
+              <span>/</span>
+              <span className="font-semibold text-slate-900 truncate">
+                {getBreadcrumbTitle()}
+              </span>
+            </div>
+            {subtitle && (
+              <span className="text-[11px] text-slate-500 truncate">{subtitle}</span>
+            )}
+          </div>
+        </div>
+      </div>
 
-          {/* Title / Store Picker */}
-          {title ? (
-            <h1 className="font-heading font-semibold text-[16px] text-on-surface truncate ml-1">
-              {title}
-            </h1>
-          ) : (
-            <div className="relative">
+      {/* Center: Global Search Bar */}
+      <div className="hidden sm:flex flex-1 max-w-md mx-2">
+        <button
+          onClick={onOpenSearch}
+          className="w-full h-9 px-3 rounded-lg bg-slate-100/80 hover:bg-slate-100 border border-slate-200/80 text-left text-xs text-slate-400 hover:text-slate-600 flex items-center justify-between transition-all group shadow-2xs"
+        >
+          <span className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
+            <span className="truncate">Search customers, products, invoices...</span>
+          </span>
+          <kbd className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-white border border-slate-200 rounded shadow-2xs">
+            Ctrl+K
+          </kbd>
+        </button>
+      </div>
+
+      {/* Right Actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Mobile Search Button */}
+        <button
+          onClick={onOpenSearch}
+          className="sm:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+          title="Search"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+
+        {/* Global Quick Action "+ Create" Button (Section 9) */}
+        <div className="relative">
+          <button
+            onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+            className="h-9 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Create</span>
+            <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+          </button>
+
+          {showCreateDropdown && (
+            <div className="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-100">
+              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Quick Actions
+              </div>
               <button
-                className="flex items-center gap-1 min-h-[44px] px-1.5 rounded-lg text-left hover:bg-surface-container-low transition-colors"
-                type="button"
-                onClick={() => setShowShopDropdown(!showShopDropdown)}
+                onClick={() => {
+                  setShowCreateDropdown(false);
+                  onOpenQuickSale();
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center justify-between text-slate-700 hover:text-slate-900 group"
               >
-                <div className="flex flex-col min-w-0">
-                  <span className="font-heading text-[13px] text-primary font-bold leading-none truncate">
-                    BM Super Mart
-                  </span>
-                  <span className="text-[11px] text-on-surface-variant truncate font-normal">
-                    {subtitle || 'Dashboard'}
-                  </span>
-                </div>
-                <span className="material-symbols-outlined text-[18px] text-on-surface-variant flex-shrink-0">
-                  arrow_drop_down
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">New Sale Bill</span>
                 </span>
+                <span className="text-[10px] text-slate-400 font-mono">Ctrl+N</span>
               </button>
-
-              {/* Shop Picker Dropdown */}
-              {showShopDropdown && (
-                <div className="absolute top-12 left-0 w-64 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/40 p-2 z-50">
-                  <div className="p-2 border-b border-outline-variant/30">
-                    <p className="text-[11px] font-bold text-outline uppercase tracking-wider">Active Business</p>
-                    <p className="font-heading font-bold text-[14px] text-primary mt-0.5">BM Super Mart</p>
-                    <p className="text-[11px] text-on-surface-variant">Indore Mandi • GSTIN: 23AAGCB1293P1Z5</p>
-                  </div>
-                  <div className="pt-1.5 flex flex-col gap-0.5">
-                    <button
-                      className="w-full text-left px-2 py-1.5 rounded-lg text-[12px] font-medium text-on-surface hover:bg-surface-container flex items-center justify-between"
-                      onClick={() => {
-                        setShowShopDropdown(false);
-                        onScreenChange('daybook');
-                      }}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-primary">account_balance_wallet</span>
-                        Cash Day Book (Roker)
-                      </span>
-                      <span className="text-[10px] bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded font-bold">Active</span>
-                    </button>
-                    <button
-                      className="w-full text-left px-2 py-1.5 rounded-lg text-[12px] font-medium text-on-surface hover:bg-surface-container flex items-center gap-2"
-                      onClick={() => {
-                        setShowShopDropdown(false);
-                        onScreenChange('khata');
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-primary">menu_book</span>
-                      Customer Khata Passbook
-                    </button>
-                    <button
-                      className="w-full text-left px-2 py-1.5 rounded-lg text-[12px] font-medium text-on-surface hover:bg-surface-container flex items-center gap-2"
-                      onClick={() => {
-                        setShowShopDropdown(false);
-                        onScreenChange('dashboard');
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-primary">dashboard</span>
-                      Business KPI Dashboard
-                    </button>
-                  </div>
-                </div>
-              )}
+              <button
+                onClick={() => {
+                  setShowCreateDropdown(false);
+                  onOpenRecordPayment();
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700 hover:text-slate-900"
+              >
+                <CreditCard className="w-4 h-4 text-emerald-600" />
+                <span className="font-medium">Receive Payment</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateDropdown(false);
+                  onOpenAddExpense();
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700 hover:text-slate-900"
+              >
+                <Receipt className="w-4 h-4 text-amber-600" />
+                <span className="font-medium">New Expense</span>
+              </button>
+              <div className="my-1 border-t border-slate-100" />
+              <button
+                onClick={() => {
+                  setShowCreateDropdown(false);
+                  onScreenChange('khata');
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700 hover:text-slate-900"
+              >
+                <UserPlus className="w-4 h-4 text-indigo-600" />
+                <span className="font-medium">New Customer</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateDropdown(false);
+                  onScreenChange('products');
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700 hover:text-slate-900"
+              >
+                <PackagePlus className="w-4 h-4 text-purple-600" />
+                <span className="font-medium">New Product</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateDropdown(false);
+                  onScreenChange('daybook');
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700 hover:text-slate-900"
+              >
+                <Truck className="w-4 h-4 text-slate-600" />
+                <span className="font-medium">New Supplier Bill</span>
+              </button>
             </div>
           )}
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Viewport Frame Mode Switcher (Desktop Workspace vs Phone Preview) */}
+        <button
+          onClick={() => onToggleMobileFrame(!isMobileFrame)}
+          className={`h-9 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+            isMobileFrame
+              ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+          }`}
+          title="Toggle between full responsive desktop view and mobile phone frame preview"
+        >
+          {isMobileFrame ? (
+            <>
+              <Smartphone className="w-4 h-4 text-blue-400" />
+              <span className="hidden md:inline">Phone Frame</span>
+            </>
+          ) : (
+            <>
+              <Monitor className="w-4 h-4 text-slate-500" />
+              <span className="hidden md:inline">Responsive</span>
+            </>
+          )}
+        </button>
+
+        {/* Notifications */}
+        <div className="relative">
           <button
-            aria-label="Search records and inventory"
-            className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors"
-            type="button"
-            onClick={() => onScreenChange('khata')}
-            title="Search Customer or Bill"
+            onClick={() => setShowNotificationPopup(!showNotificationPopup)}
+            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors relative"
+            title="Notifications"
           >
-            <span className="material-symbols-outlined text-[22px]">search</span>
+            <Bell className="w-4.5 h-4.5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
           </button>
 
-          <div className="relative">
-            <button
-              aria-label="Notifications"
-              className="relative w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors"
-              type="button"
-              onClick={() => setShowNotificationPopup(!showNotificationPopup)}
-              title="Recent Alerts"
-            >
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-error ring-2 ring-surface"></span>
-            </button>
-
-            {showNotificationPopup && (
-              <div className="absolute top-12 right-0 w-72 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/40 p-3 z-50">
-                <div className="flex items-center justify-between pb-2 border-b border-outline-variant/30">
-                  <span className="font-heading font-bold text-[13px]">Business Notifications</span>
-                  <span className="text-[10px] bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-bold">1 Overdue</span>
+          {showNotificationPopup && (
+            <div className="absolute right-0 mt-1.5 w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-50 text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-slate-900">Notifications</span>
+                <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded">
+                  2 New
+                </span>
+              </div>
+              <div className="space-y-2 pt-2">
+                <div className="p-2 rounded-lg bg-rose-50/50 border border-rose-100">
+                  <p className="font-semibold text-rose-900">Overdue Payment Alert</p>
+                  <p className="text-[11px] text-rose-700 mt-0.5">
+                    Asra Fruits &amp; Nuts has ₹14,200 pending for 4 days past credit term.
+                  </p>
                 </div>
-                <div className="pt-2 flex flex-col gap-2">
-                  <div
-                    className="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors"
-                    onClick={() => {
-                      setShowNotificationPopup(false);
-                      onScreenChange('khata');
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[12px] text-error">Asra Fruits &amp; Nuts</span>
-                      <span className="text-[10px] text-on-surface-variant">4d Overdue</span>
-                    </div>
-                    <p className="text-[11px] text-on-surface-variant mt-0.5">Net balance ₹14,200 pending recovery</p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-surface-container-low">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[12px] text-secondary">Cash Drawer Check</span>
-                      <span className="text-[10px] text-on-surface-variant">10:00 AM</span>
-                    </div>
-                    <p className="text-[11px] text-on-surface-variant mt-0.5">Morning cash tally ₹85,400 verified</p>
-                  </div>
+                <div className="p-2 rounded-lg bg-amber-50/50 border border-amber-100">
+                  <p className="font-semibold text-amber-900">Low Stock Notice</p>
+                  <p className="text-[11px] text-amber-700 mt-0.5">
+                    Green Cardamom 8mm is down to 8 kg (minimum threshold: 10 kg).
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          {/* Profile Photo */}
-          <div className="relative pl-1">
-            <button
-              className="flex items-center"
-              type="button"
-              onClick={() => setShowProfilePopup(!showProfilePopup)}
-              aria-label="Owner Profile"
-            >
-              <img
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20 hover:ring-primary transition-all"
-                src={ASSETS.ownerPhoto}
-              />
-            </button>
+        {/* User / Business Profile */}
+        <div className="relative">
+          <button
+            onClick={() => setShowProfilePopup(!showProfilePopup)}
+            className="flex items-center gap-2 p-1 pl-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+          >
+            <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
+              A
+            </div>
+            <div className="hidden lg:flex flex-col text-left">
+              <span className="text-xs font-semibold text-slate-900 leading-tight">Anas</span>
+              <span className="text-[10px] text-slate-500 leading-tight">Admin (Owner)</span>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:inline" />
+          </button>
 
-            {showProfilePopup && (
-              <div className="absolute top-12 right-0 w-60 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/40 p-3 z-50">
-                <div className="flex items-center gap-2.5 pb-2 border-b border-outline-variant/30">
-                  <img
-                    alt="Owner"
-                    className="w-9 h-9 rounded-full object-cover ring-1 ring-primary/30"
-                    src={ASSETS.ownerPhoto}
-                  />
-                  <div className="min-w-0">
-                    <p className="font-heading font-bold text-[13px] text-on-surface truncate">Imran Bhai</p>
-                    <p className="text-[11px] text-on-surface-variant truncate">Master Shop Owner</p>
-                  </div>
-                </div>
-                <div className="pt-2 flex flex-col gap-1 text-[12px]">
-                  <div className="flex items-center justify-between py-1 text-on-surface-variant">
-                    <span>Store ID</span>
-                    <span className="font-mono font-bold text-primary">#BM-IND-01</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1 text-on-surface-variant">
-                    <span>Auto Backup</span>
-                    <span className="text-secondary font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> Active
-                    </span>
-                  </div>
-                </div>
+          {showProfilePopup && (
+            <div className="absolute right-0 mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-50 text-xs">
+              <div className="px-3 py-2 border-b border-slate-100">
+                <p className="font-bold text-slate-900">Mohammed Anas</p>
+                <p className="text-[11px] text-slate-500">0786mdanas@gmail.com</p>
               </div>
-            )}
-          </div>
+              <button
+                onClick={() => {
+                  setShowProfilePopup(false);
+                  onScreenChange('settings');
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+              >
+                <span>Store Settings</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowProfilePopup(false);
+                  onScreenChange('reports');
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+              >
+                <span>Financial Reports</span>
+              </button>
+              <div className="border-t border-slate-100 my-1" />
+              <div className="px-3 py-1.5 text-[11px] text-slate-400">
+                Vyapaar Flow v2.4 SaaS
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

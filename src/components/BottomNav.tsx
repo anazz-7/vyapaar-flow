@@ -1,5 +1,14 @@
 import React from 'react';
 import { ActiveTab } from '../types';
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Users,
+  Package,
+  BarChart3,
+  Plus,
+  MoreHorizontal,
+} from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: ActiveTab;
@@ -13,113 +22,72 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onQuickSale,
 }) => {
   return (
-    <>
-      {/* Floating Quick Sale Action Trigger */}
-      <div className="fixed bottom-20 right-4 sm:right-6 z-40">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1 select-none shadow-lg">
+      <div className="max-w-md mx-auto flex items-center justify-around relative">
+        {/* Home */}
         <button
-          onClick={onQuickSale}
-          className="flex items-center gap-1.5 h-12 px-4 rounded-full bg-secondary text-on-secondary shadow-[0_8px_20px_rgba(0,108,74,0.32)] hover:bg-secondary/90 active:scale-95 transition-all"
-          type="button"
+          onClick={() => onTabChange('home')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors ${
+            activeTab === 'home'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
         >
-          <span className="material-symbols-outlined text-[22px]">add</span>
-          <span className="font-heading font-bold text-[14px] tracking-wide">+ Quick Sale</span>
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">Home</span>
+        </button>
+
+        {/* Sales */}
+        <button
+          onClick={() => onTabChange('sales')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors ${
+            activeTab === 'sales'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <ShoppingCart className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">Sales</span>
+        </button>
+
+        {/* Central Floating POS Quick Sale Button */}
+        <div className="relative -top-4 flex flex-col items-center">
+          <button
+            onClick={onQuickSale}
+            className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 active:scale-95 transition-all ring-4 ring-white"
+            title="Speed Sale Bill"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+          <span className="text-[10px] font-bold text-slate-700 mt-0.5">Billing</span>
+        </div>
+
+        {/* Products */}
+        <button
+          onClick={() => onTabChange('items')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors ${
+            activeTab === 'items'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Package className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">Stock</span>
+        </button>
+
+        {/* Reports / More */}
+        <button
+          onClick={() => onTabChange('more')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors ${
+            activeTab === 'more'
+              ? 'text-blue-600 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">Reports</span>
         </button>
       </div>
-
-      {/* Persistent Bottom Tab Bar */}
-      <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl border-t border-outline-variant/30 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
-        <div className="max-w-md mx-auto flex items-center justify-around h-16 px-1">
-          <button
-            onClick={() => onTabChange('home')}
-            className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-colors ${
-              activeTab === 'home'
-                ? 'text-primary font-bold'
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[22px]"
-              style={{ fontVariationSettings: activeTab === 'home' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              dashboard
-            </span>
-            <span className="text-[11px] font-medium mt-0.5">Home</span>
-          </button>
-
-          <button
-            onClick={() => onTabChange('sales')}
-            className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-colors ${
-              activeTab === 'sales'
-                ? 'text-primary font-bold'
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[22px]"
-              style={{ fontVariationSettings: activeTab === 'sales' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              receipt_long
-            </span>
-            <span className="text-[11px] font-medium mt-0.5">Sales</span>
-          </button>
-
-          <button
-            onClick={() => onTabChange('party')}
-            className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-colors ${
-              activeTab === 'party'
-                ? 'text-primary font-bold'
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[22px]"
-              style={{ fontVariationSettings: activeTab === 'party' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              group
-            </span>
-            <span className="text-[11px] font-medium mt-0.5">Party</span>
-          </button>
-
-          <button
-            onClick={() => onTabChange('items')}
-            className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-colors ${
-              activeTab === 'items'
-                ? 'text-primary font-bold'
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[22px]"
-              style={{ fontVariationSettings: activeTab === 'items' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              inventory_2
-            </span>
-            <span className="text-[11px] font-medium mt-0.5">Items</span>
-          </button>
-
-          <button
-            onClick={() => onTabChange('more')}
-            className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 transition-colors ${
-              activeTab === 'more'
-                ? 'text-primary font-bold'
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[22px]"
-              style={{ fontVariationSettings: activeTab === 'more' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              widgets
-            </span>
-            <span className="text-[11px] font-medium mt-0.5">More</span>
-          </button>
-        </div>
-      </nav>
-    </>
+    </nav>
   );
 };

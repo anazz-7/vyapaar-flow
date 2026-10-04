@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
 import { ExpenseEntry } from '../types';
+import {
+  Wallet,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Plus,
+  Coins,
+  Building2,
+  Calendar,
+  Filter,
+  Download,
+  Receipt,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Tag,
+  CreditCard,
+} from 'lucide-react';
 
 interface DayBookScreenProps {
   expenses: ExpenseEntry[];
@@ -16,8 +33,7 @@ export const DayBookScreen: React.FC<DayBookScreenProps> = ({
   onCountCash,
   onBankDeposit,
 }) => {
-  const [activeSegment, setActiveSegment] = useState<'daybook' | 'categories'>('daybook');
-  const [categoryFilter, setCategoryFilter] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
 
   const dates = [
@@ -26,425 +42,254 @@ export const DayBookScreen: React.FC<DayBookScreenProps> = ({
     'Tue, 22 Oct 2024',
   ];
 
-  const totalExpenseAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+  const categories = ['All', 'Transport', 'Staff Tea', 'Rent / Advance', 'Packaging', 'Electricity'];
 
   const filteredExpenses = expenses.filter((exp) => {
-    if (categoryFilter === 'All') return true;
-    return exp.category.toLowerCase().includes(categoryFilter.toLowerCase());
+    if (selectedCategory === 'All') return true;
+    return exp.category.toLowerCase().includes(selectedCategory.toLowerCase());
   });
 
-  // Calculate category aggregates for Category View
-  const categoryTotals = expenses.reduce<Record<string, number>>((acc, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-    return acc;
-  }, {});
+  const totalExpenseAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+
+  // Cash Drawer equation
+  const openingCash = 42500;
+  const cashIn = 47150;
+  const cashOut = totalExpenseAmount;
+  const closingCash = openingCash + cashIn - cashOut;
 
   return (
-    <div className="flex flex-col w-full max-w-lg mx-auto pb-32 px-3 sm:px-4">
-      {/* Date Selector & Timeline Bar */}
-      <div className="pt-2 pb-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <button
-            aria-label="Previous day"
-            onClick={() => setCurrentDateIndex((prev) => Math.min(prev + 1, dates.length - 1))}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface active:scale-95 transition-all"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-low text-on-surface border border-outline-variant/30">
-            <span className="material-symbols-outlined text-[17px] text-primary">calendar_today</span>
-            <span className="font-heading font-bold text-[13px]">{dates[currentDateIndex]}</span>
-          </div>
-
-          <button
-            aria-label="Next day"
-            onClick={() => setCurrentDateIndex((prev) => Math.max(prev - 1, 0))}
-            disabled={currentDateIndex === 0}
-            className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
-              currentDateIndex === 0
-                ? 'bg-surface-container text-outline-variant cursor-not-allowed opacity-50'
-                : 'bg-surface-container hover:bg-surface-container-high text-on-surface active:scale-95'
-            }`}
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-          </button>
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Top Header & Date Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-slate-900 tracking-tight">
+            Cash Day Book (Roker)
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Daily cash drawer flow, physical register reconciliation, and operating expenses.
+          </p>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            aria-label="Export PDF"
-            onClick={() => alert('Exporting Day Book PDF...')}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-xs border border-outline-variant/30 active:scale-95 transition-all"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-          </button>
-
-          <button
-            aria-label="Filter"
-            onClick={() => alert('Filter transactions by counter, user, or payment mode')}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant shadow-xs border border-outline-variant/30 active:scale-95 transition-all"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">tune</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Segmented Navigation Control */}
-      <div className="mb-3">
-        <div className="flex p-1 rounded-xl bg-surface-container border border-outline-variant/20 shadow-inner">
-          <button
-            onClick={() => setActiveSegment('daybook')}
-            className={`flex-1 py-2 px-3 rounded-lg font-heading text-[12px] text-center transition-all ${
-              activeSegment === 'daybook'
-                ? 'bg-surface-container-lowest text-primary font-bold shadow-xs'
-                : 'text-on-surface-variant font-medium hover:text-on-surface'
-            }`}
-            type="button"
-          >
-            Day Book (Cash In/Out)
-          </button>
-          <button
-            onClick={() => setActiveSegment('categories')}
-            className={`flex-1 py-2 px-3 rounded-lg font-heading text-[12px] text-center transition-all ${
-              activeSegment === 'categories'
-                ? 'bg-surface-container-lowest text-primary font-bold shadow-xs'
-                : 'text-on-surface-variant font-medium hover:text-on-surface'
-            }`}
-            type="button"
-          >
-            Expense Categories
-          </button>
-        </div>
-      </div>
-
-      {/* Primary Net Cash Hero Card */}
-      <div className="mb-3.5">
-        <div className="rounded-2xl bg-primary text-on-primary p-4 shadow-md relative overflow-hidden">
-          {/* Ambient background decoration */}
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-on-primary/5 pointer-events-none"></div>
-
-          <div className="flex items-start justify-between relative z-10">
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-surface-container-highest/80 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[15px] text-secondary-fixed">
-                  account_balance_wallet
-                </span>
-                Current Net Cash in Drawer
-              </span>
-              <div className="font-heading font-black text-[30px] tracking-tight mt-1 text-on-primary flex items-baseline">
-                <span>₹{netCash.toLocaleString('en-IN')}</span>
-                <span className="text-[11px] font-bold ml-2 px-2 py-0.5 rounded-full bg-secondary text-on-secondary">
-                  Healthy
-                </span>
-              </div>
-            </div>
-
+        <div className="flex items-center gap-2">
+          {/* Date Navigator */}
+          <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
             <button
-              onClick={onCountCash}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary text-[11px] font-bold active:scale-95 transition-all border border-on-primary/20"
-              type="button"
+              onClick={() => setCurrentDateIndex((p) => Math.min(p + 1, dates.length - 1))}
+              className="p-1.5 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              title="Previous Day"
             >
-              <span className="material-symbols-outlined text-[16px]">verified</span>
-              <span>Count Cash</span>
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="px-2.5 py-1 text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <span>{dates[currentDateIndex]}</span>
+            </div>
+            <button
+              onClick={() => setCurrentDateIndex((p) => Math.max(p - 1, 0))}
+              disabled={currentDateIndex === 0}
+              className="p-1.5 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30"
+              title="Next Day"
+            >
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Cash Matrix Mini Grid */}
-          <div className="grid grid-cols-3 gap-2 mt-3.5 pt-2.5 bg-primary-container/40 rounded-xl p-2.5 border border-on-primary/10">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-surface-container-highest/70 font-medium">Opening (8 AM)</span>
-              <span className="font-heading text-[13px] font-bold text-on-primary mt-0.5">₹82,850</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-secondary-fixed font-bold">Cash In (+)</span>
-              <span className="font-heading text-[13px] font-bold text-secondary-fixed mt-0.5">+₹6,800</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-tertiary-fixed-dim font-bold">Cash Out (-)</span>
-              <span className="font-heading text-[13px] font-bold text-tertiary-fixed-dim mt-0.5">
-                -₹{totalExpenseAmount.toLocaleString('en-IN')}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Operational Quick Action Shortcuts */}
-      <div className="mb-3.5">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
           <button
-            onClick={onAddExpense}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-primary text-on-primary font-heading font-bold text-[12px] flex-shrink-0 shadow-xs active:scale-95 transition-all"
-            type="button"
+            onClick={() => window.print()}
+            className="h-9 px-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-            <span>+ Add Outflow</span>
-          </button>
-
-          <button
-            onClick={onBankDeposit}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-surface-container-lowest text-on-surface font-heading font-semibold text-[12px] flex-shrink-0 shadow-xs border border-outline-variant/30 active:scale-95 transition-all hover:bg-surface-container"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px] text-secondary">account_balance</span>
-            <span>Bank Deposit</span>
-          </button>
-
-          <button
-            onClick={() => alert('Generating Petty Cash Voucher slip...')}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-surface-container-lowest text-on-surface font-heading font-semibold text-[12px] flex-shrink-0 shadow-xs border border-outline-variant/30 active:scale-95 transition-all hover:bg-surface-container"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px] text-tertiary-container">receipt</span>
-            <span>Petty Cash Slip</span>
-          </button>
-
-          <button
-            onClick={() => alert('Loading Past Khata archives for October...')}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-surface-container-lowest text-on-surface font-heading font-semibold text-[12px] flex-shrink-0 shadow-xs border border-outline-variant/30 active:scale-95 transition-all hover:bg-surface-container"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px] text-outline">history</span>
-            <span>Past Khata</span>
+            <Download className="w-4 h-4 text-slate-500" />
+            <span className="hidden sm:inline">Export Day Sheet</span>
           </button>
         </div>
       </div>
 
-      {activeSegment === 'daybook' ? (
-        <>
-          {/* Expense Header with Quick Filter Badges */}
-          <div className="mb-2 flex items-center justify-between">
+      {/* Cash Drawer Reconciliation Equation Banner */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-slate-900 text-white">
+              <Wallet className="w-4 h-4" />
+            </div>
             <div>
-              <span className="font-heading font-bold text-[15px] text-on-surface">Today's Expenses</span>
-              <span className="text-[11px] text-on-surface-variant block mt-0.5">
-                Total Outflow: <strong className="text-error">₹{totalExpenseAmount.toLocaleString('en-IN')}</strong> • {expenses.length} Entries
+              <h2 className="font-heading font-bold text-sm text-slate-900">
+                Daily Cash Drawer Position (Roker Balance)
+              </h2>
+              <span className="text-[11px] text-slate-500">
+                Counter drawer balance reconciled with digital receipts
               </span>
             </div>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">
-              Roker Khata
-            </span>
           </div>
 
-          {/* Category Filter Horizontal Strip */}
-          <div className="mb-3">
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-              <button
-                onClick={() => setCategoryFilter('All')}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
-                  categoryFilter === 'All'
-                    ? 'bg-primary text-on-primary shadow-xs'
-                    : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/30'
-                }`}
-                type="button"
-              >
-                All (₹{totalExpenseAmount.toLocaleString('en-IN')})
-              </button>
-
-              <button
-                onClick={() => setCategoryFilter('Rent')}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
-                  categoryFilter === 'Rent'
-                    ? 'bg-primary text-on-primary shadow-xs'
-                    : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/30'
-                }`}
-                type="button"
-              >
-                Rent / Advance (₹2,500)
-              </button>
-
-              <button
-                onClick={() => setCategoryFilter('Transport')}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
-                  categoryFilter === 'Transport'
-                    ? 'bg-primary text-on-primary shadow-xs'
-                    : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/30'
-                }`}
-                type="button"
-              >
-                Transport (₹850)
-              </button>
-
-              <button
-                onClick={() => setCategoryFilter('Staff Tea')}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
-                  categoryFilter === 'Staff Tea'
-                    ? 'bg-primary text-on-primary shadow-xs'
-                    : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/30'
-                }`}
-                type="button"
-              >
-                Staff Tea (₹450)
-              </button>
-
-              <button
-                onClick={() => setCategoryFilter('Packaging')}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
-                  categoryFilter === 'Packaging'
-                    ? 'bg-primary text-on-primary shadow-xs'
-                    : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/30'
-                }`}
-                type="button"
-              >
-                Packaging (₹450)
-              </button>
-            </div>
-          </div>
-
-          {/* Chronological Expense Ledger Feed */}
-          <div className="flex flex-col gap-2.5 mb-4">
-            {filteredExpenses.map((exp, index) => (
-              <React.Fragment key={exp.id}>
-                <div className="p-3.5 rounded-2xl bg-surface-container-lowest shadow-xs border border-outline-variant/30 flex flex-col gap-2 relative">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
-                        <span className="material-symbols-outlined text-[18px]">
-                          {exp.category === 'Transport'
-                            ? 'local_shipping'
-                            : exp.category === 'Staff Tea'
-                            ? 'local_cafe'
-                            : exp.category === 'Rent / Advance'
-                            ? 'storefront'
-                            : 'shopping_bag'}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-heading font-bold text-[13px] text-on-surface truncate">
-                            {exp.title}
-                          </span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant">
-                            #{exp.expNumber}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-on-surface-variant truncate mt-0.5">
-                          {exp.vendor}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right flex-shrink-0">
-                      <span className="font-heading font-extrabold text-[15px] text-error block">
-                        -₹{exp.amount.toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-[10px] text-on-surface-variant block mt-0.5">
-                        {exp.timeStr}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1 border-t border-outline-variant/20 bg-surface-container-low/40 px-2.5 py-1.5 rounded-lg text-[11px]">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold text-[10px]">
-                        <span className="material-symbols-outlined text-[12px]">payments</span>
-                        {exp.paymentMode}
-                      </span>
-                      {exp.badgeSecondary && (
-                        <span className="inline-flex items-center gap-0.5 text-primary font-bold text-[10px]">
-                          <span className="material-symbols-outlined text-[13px]">attachment</span>
-                          {exp.badgeSecondary}
-                        </span>
-                      )}
-                      {exp.reference && (
-                        <span className="text-secondary font-bold text-[10px]">
-                          {exp.reference}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      aria-label="Transaction Options"
-                      className="text-on-surface-variant hover:text-primary"
-                      type="button"
-                      onClick={() => alert(`Managing Expense #${exp.expNumber}`)}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Reconciled Checkpoint Banner after 3rd item */}
-                {index === 2 && (
-                  <div className="p-2.5 rounded-xl bg-surface-container border border-secondary/30 flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
-                      <span className="font-heading font-bold text-on-surface">Cash Drawer Reconciled (10:00 AM)</span>
-                    </div>
-                    <span className="text-on-surface-variant font-medium">Verified by Owner</span>
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          {/* Store Owner Tip */}
-          <div className="mb-4">
-            <div className="p-3.5 rounded-2xl bg-surface-container-low border border-outline-variant/30 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary flex-shrink-0">
-                <span className="material-symbols-outlined text-[20px]">lightbulb</span>
-              </div>
-              <div className="min-w-0">
-                <span className="font-heading font-bold text-[12px] text-on-surface block">
-                  Vyapaar Tip for BM Super Mart
-                </span>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">
-                  Match physical cash with Day Book before closing the shutter tonight.
-                </p>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        /* Expense Categories Breakdown View */
-        <div className="flex flex-col gap-2.5 mb-4">
-          <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/30 shadow-xs">
-            <h3 className="font-heading font-bold text-[14px] mb-3">Category Distribution</h3>
-            <div className="flex flex-col gap-3">
-              {Object.entries(categoryTotals).map(([cat, amount]) => {
-                const pct = Math.round((amount / totalExpenseAmount) * 100);
-                return (
-                  <div key={cat} className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between text-[12px]">
-                      <span className="font-medium text-on-surface">{cat}</span>
-                      <span className="font-heading font-bold">
-                        ₹{amount.toLocaleString('en-IN')}{' '}
-                        <span className="text-[10px] text-on-surface-variant">({pct}%)</span>
-                      </span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full rounded-full" style={{ width: `${pct}%` }}></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onCountCash}
+              className="h-8 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <Coins className="w-3.5 h-3.5 text-slate-600" />
+              <span>Count Physical Notes</span>
+            </button>
+            <button
+              onClick={onBankDeposit}
+              className="h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <Building2 className="w-3.5 h-3.5 text-blue-600" />
+              <span>Deposit to Bank</span>
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Sticky Bottom Summary Strip */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 px-3 sm:px-4 py-2 bg-surface/95 backdrop-blur-md border-t border-outline-variant/20">
-        <div className="max-w-lg mx-auto p-2.5 rounded-2xl bg-surface-container-lowest shadow-md border border-outline-variant/30 flex items-center justify-between">
-          <div className="flex flex-col pl-2">
-            <span className="text-[10px] text-on-surface-variant uppercase font-bold">Today's Outflow</span>
-            <span className="font-heading text-[15px] font-black text-error">
-              ₹{totalExpenseAmount.toLocaleString('en-IN')}{' '}
-              <span className="text-[11px] font-normal text-on-surface-variant">({expenses.length} Items)</span>
+        {/* 4 Flow Cards: Opening + Cash In - Cash Out = Closing */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              1. Opening Drawer Cash
             </span>
+            <div className="font-heading font-bold text-xl text-slate-800 mt-1 tabular-nums">
+              ₹{openingCash.toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-slate-500">Brought forward at 09:00 AM</span>
           </div>
 
-          <button
-            onClick={onAddExpense}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-error text-on-error font-heading font-bold text-[13px] shadow-sm active:scale-95 transition-all hover:bg-error/90"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-            <span>+ Add Expense</span>
-          </button>
+          <div className="p-3.5 rounded-lg bg-emerald-50/70 border border-emerald-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">
+              + Total Cash In (Sales + Khata)
+            </span>
+            <div className="font-heading font-bold text-xl text-emerald-700 mt-1 tabular-nums">
+              +₹{cashIn.toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-emerald-600">Counter collection &amp; receipts</span>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-rose-50/70 border border-rose-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 block">
+              − Total Cash Out (Expenses)
+            </span>
+            <div className="font-heading font-bold text-xl text-rose-700 mt-1 tabular-nums">
+              −₹{cashOut.toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-rose-600">{expenses.length} operating vouchers</span>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900 text-white shadow-md border border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              = Net In-Hand Drawer Cash
+            </span>
+            <div className="font-heading font-extrabold text-xl text-emerald-400 mt-1 tabular-nums">
+              ₹{closingCash.toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-emerald-300 font-semibold">
+              Drawer balanced &amp; verified ✓
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Expenses Register Table & Controls */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        {/* Table Header & Category Filter */}
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50">
+          <div className="flex items-center gap-2">
+            <span className="font-heading font-bold text-slate-900 text-sm">
+              Operating Outflow Expenses
+            </span>
+            <span className="text-slate-400">•</span>
+            <span className="text-xs text-slate-500">{filteredExpenses.length} entries</span>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Category Pills */}
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar text-xs">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
+                    selectedCategory === cat
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={onAddExpense}
+              className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors flex-shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Log Expense</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Clean Expenses Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-4">Voucher / Time</th>
+                <th className="py-2.5 px-4">Expense Title</th>
+                <th className="py-2.5 px-4">Vendor / Payee</th>
+                <th className="py-2.5 px-4">Category</th>
+                <th className="py-2.5 px-4">Payment Mode</th>
+                <th className="py-2.5 px-4 text-right">Amount</th>
+                <th className="py-2.5 px-4 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredExpenses.map((exp) => (
+                <tr key={exp.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    <span className="font-mono font-bold text-slate-900 block">
+                      #{exp.expNumber}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {exp.timeStr} • {exp.dateStr}
+                    </span>
+                  </td>
+
+                  <td className="py-3 px-4">
+                    <span className="font-semibold text-slate-900 block truncate">
+                      {exp.title}
+                    </span>
+                    {exp.reference && (
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Ref: {exp.reference}
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="py-3 px-4 text-slate-600 max-w-[200px] truncate">
+                    {exp.vendor}
+                  </td>
+
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium">
+                      <Tag className="w-3 h-3 text-slate-400" />
+                      <span>{exp.category}</span>
+                    </span>
+                  </td>
+
+                  <td className="py-3 px-4 text-slate-600">
+                    <span className="text-xs">{exp.paymentMode}</span>
+                  </td>
+
+                  <td className="py-3 px-4 text-right font-mono font-bold text-rose-600 whitespace-nowrap">
+                    −₹{exp.amount.toLocaleString('en-IN')}
+                  </td>
+
+                  <td className="py-3 px-4 text-center">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Verified ✓
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
