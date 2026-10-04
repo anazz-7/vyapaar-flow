@@ -1,0 +1,6 @@
+{
+  "name": "Vyapaar Flow - Smart Business Khata & Day Book",
+  "description": "Indian MSME business ledger, customer khata passbook, daily cash drawer roker, payment recording, and instant WhatsApp receipts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
